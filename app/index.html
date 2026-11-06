@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- @spec SPEC-04@1 SPEC-06@1 -->
+<!-- @spec SPEC-04@2 SPEC-06@1 -->
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -20,8 +20,8 @@
       <input id="nome" name="nome" autocomplete="name">
 
       <label for="cpf">CPF</label>
-      <input id="cpf" name="cpf" inputmode="numeric">
-      <div id="cpf-erro" class="erro" hidden></div>
+      <input id="cpf" name="cpf" inputmode="numeric" aria-describedby="cpf-erro">
+      <div id="cpf-erro" class="erro" role="alert"></div>
 
       <label for="email">E-mail</label>
       <input id="email" name="email" type="email" autocomplete="email">
@@ -52,12 +52,15 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!cpfValido(cpf.value)) {
-        // Mensagem apenas visual (barreira observada em EVD-17)
-        erro.textContent = 'CPF inválido';
-        erro.hidden = false;
+        // CR-001: erro comunicado à tecnologia assistiva
+        form.reset();  // limpa o formulário para uma nova tentativa
+        erro.textContent = 'CPF inválido. Digite os 11 números do CPF.';
+        cpf.setAttribute('aria-invalid', 'true');
+        cpf.focus();
         return;
       }
-      erro.hidden = true;
+      erro.textContent = '';
+      cpf.removeAttribute('aria-invalid');
       form.hidden = true;
       document.getElementById('confirmacao').hidden = false;
     });
