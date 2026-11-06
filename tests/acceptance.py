@@ -5,6 +5,8 @@ Os testes são escritos a partir dos critérios aprovados, e não pelo agente
 que implementa a mudança (verificação independente).
 """
 
+import re
+
 CRITERIA = {}
 
 CPF_INVALIDO = "123.456.789-00"
@@ -42,6 +44,36 @@ def cpf_invalido_exibe_mensagem(page):
 def cpf_valido_envia(page):
     preencher(page, CPF_VALIDO)
     assert page.locator("#confirmacao").is_visible(), "inscrição válida não foi enviada"
+
+
+# ---- Critérios adicionados por CR-001 (evidência EVD-17), escritos antes da implementação
+
+@criterion("AC-04.4")
+def foco_vai_para_cpf(page):
+    preencher(page, CPF_INVALIDO)
+    foco = page.evaluate("document.activeElement && document.activeElement.id")
+    assert foco == "cpf", f"foco está em '{foco}', esperado 'cpf'"
+
+
+@criterion("AC-04.5")
+def cpf_marcado_invalido_com_descricao(page):
+    from playwright.sync_api import expect
+    preencher(page, CPF_INVALIDO)
+    campo = page.get_by_role("textbox", name="CPF")
+    assert campo.get_attribute("aria-invalid") == "true", "campo CPF sem aria-invalid=true"
+    # descrição acessível calculada pela árvore de acessibilidade do navegador
+    expect(campo).to_have_accessible_description(re.compile("CPF inválido"), timeout=1000)
+
+
+@criterion("AC-04.6")
+def mensagem_em_regiao_viva(page):
+    regioes = page.evaluate(
+        "[...document.querySelectorAll('[role=alert],[aria-live=polite],[aria-live=assertive]')].map(e => e.id || e.outerHTML.slice(0, 40))")
+    assert regioes, "nenhuma região viva presente no carregamento da página"
+    preencher(page, CPF_INVALIDO)
+    textos = page.evaluate(
+        "[...document.querySelectorAll('[role=alert],[aria-live=polite],[aria-live=assertive]')].map(e => e.textContent)")
+    assert any("CPF inválido" in t for t in textos), "mensagem de erro não foi inserida em região viva"
 
 
 @criterion("AC-06.1")

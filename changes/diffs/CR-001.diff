@@ -1,0 +1,31 @@
+--- a/specs/SPEC-04.yaml
++++ b/specs/SPEC-04.yaml
+@@ -1,8 +1,8 @@
+ id: SPEC-04
+ title: Validação do CPF na matrícula
+-version: 1
++version: 2
+ status: active
+-description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário.
++description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário, perceptível visualmente e por tecnologias assistivas.
+ criteria:
+ - id: AC-04.1
+   text: Ao acionar "Continuar" com CPF inválido, a inscrição não é enviada.
+@@ -10,6 +10,17 @@
+   text: Ao acionar "Continuar" com CPF inválido, uma mensagem de erro é exibida.
+ - id: AC-04.3
+   text: Ao acionar "Continuar" com CPF válido e demais campos preenchidos, a inscrição é enviada.
++- id: AC-04.4
++  text: Ao acionar "Continuar" com CPF inválido, o foco é movido para o campo CPF.
++- id: AC-04.5
++  text: Com CPF inválido, o campo CPF é marcado como inválido (aria-invalid) e tem a mensagem de erro como descrição acessível.
++- id: AC-04.6
++  text: A mensagem de erro é inserida em uma região viva (role="alert" ou aria-live) presente na página desde o carregamento, para ser anunciada por leitores de tela.
+ history:
+ - version: 1
+   change: versão inicial
++- version: 2
++  cr: CR-001
++  evidence:
++  - EVD-17
++  approved_by: Lucas Matheus Silva

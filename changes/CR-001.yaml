@@ -28,4 +28,7 @@ preserve:
 - AC-04.3
 - AC-06.1
 decision:
-  status: pending
+  status: approved
+  by: Lucas Matheus Silva
+  at: '2026-11-06T19:36:27-03:00'
+  note: 'Aprovada: lacuna confirmada na sessão T2'
