@@ -1,0 +1,28 @@
+{
+  "label": "r0-v1",
+  "at": "2026-11-06T19:35:49-03:00",
+  "commit": null,
+  "spec_versions": {
+    "SPEC-04": 1,
+    "SPEC-06": 1
+  },
+  "criteria": {
+    "AC-04.1": {
+      "test": "cpf_invalido_bloqueia_envio",
+      "passed": true
+    },
+    "AC-04.2": {
+      "test": "cpf_invalido_exibe_mensagem",
+      "passed": true
+    },
+    "AC-04.3": {
+      "test": "cpf_valido_envia",
+      "passed": true
+    },
+    "AC-06.1": {
+      "test": "dados_preservados_apos_erro",
+      "passed": true
+    }
+  },
+  "axe_violations": []
+}
