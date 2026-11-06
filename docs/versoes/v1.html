@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!-- Snapshot da versão 1 (antes de EVD-17/CR-001), mantido fora de app/ apenas para comparação. -->
+<!-- @spec SPEC-04@1 SPEC-06@1 -->
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Matrícula Acadêmica</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 32rem; margin: 2rem auto; }
+    label { display: block; margin-top: 1rem; }
+    input { width: 100%; padding: .4rem; }
+    .erro { color: #b00020; font-size: .9rem; }
+    button { margin-top: 1.5rem; padding: .5rem 1rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Matrícula Acadêmica</h1>
+    <form id="form-matricula" novalidate>
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" autocomplete="name">
+
+      <label for="cpf">CPF</label>
+      <input id="cpf" name="cpf" inputmode="numeric">
+      <div id="cpf-erro" class="erro" hidden></div>
+
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email">
+
+      <button type="submit">Continuar</button>
+    </form>
+    <p id="confirmacao" hidden>Inscrição enviada com sucesso.</p>
+  </main>
+
+  <script>
+    // SPEC-04: validação do CPF (dígitos verificadores)
+    function cpfValido(valor) {
+      const cpf = valor.replace(/\D/g, '');
+      if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+      const calc = (n) => {
+        let soma = 0;
+        for (let i = 0; i < n; i++) soma += Number(cpf[i]) * (n + 1 - i);
+        const resto = (soma * 10) % 11;
+        return resto === 10 ? 0 : resto;
+      };
+      return calc(9) === Number(cpf[9]) && calc(10) === Number(cpf[10]);
+    }
+
+    const form = document.getElementById('form-matricula');
+    const cpf = document.getElementById('cpf');
+    const erro = document.getElementById('cpf-erro');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!cpfValido(cpf.value)) {
+        // Mensagem apenas visual (barreira observada em EVD-17)
+        erro.textContent = 'CPF inválido';
+        erro.hidden = false;
+        return;
+      }
+      erro.hidden = true;
+      form.hidden = true;
+      document.getElementById('confirmacao').hidden = false;
+    });
+  </script>
+</body>
+</html>

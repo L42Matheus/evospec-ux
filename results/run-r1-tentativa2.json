@@ -1,0 +1,40 @@
+{
+  "label": "r1-tentativa2",
+  "at": "2026-11-06T19:37:08-03:00",
+  "commit": "31cdfc7",
+  "spec_versions": {
+    "SPEC-04": 2,
+    "SPEC-06": 1
+  },
+  "criteria": {
+    "AC-04.1": {
+      "test": "cpf_invalido_bloqueia_envio",
+      "passed": true
+    },
+    "AC-04.2": {
+      "test": "cpf_invalido_exibe_mensagem",
+      "passed": true
+    },
+    "AC-04.3": {
+      "test": "cpf_valido_envia",
+      "passed": true
+    },
+    "AC-04.4": {
+      "test": "foco_vai_para_cpf",
+      "passed": true
+    },
+    "AC-04.5": {
+      "test": "cpf_marcado_invalido_com_descricao",
+      "passed": true
+    },
+    "AC-04.6": {
+      "test": "mensagem_em_regiao_viva",
+      "passed": true
+    },
+    "AC-06.1": {
+      "test": "dados_preservados_apos_erro",
+      "passed": true
+    }
+  },
+  "axe_violations": []
+}

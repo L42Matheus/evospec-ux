@@ -17,12 +17,44 @@ tests/acceptance.py       testes de aceitação ligados a critérios (@criterion
 tests/test_governance.py  autotestes das regras de governança
 results/baseline.json     última verificação aceita (sem regressões)
 TRACE.md                  matriz evidência → proposta → spec@versão → critério → teste → resultado
-evospec.py                CLI do método
+evospec.py                núcleo do método e CLI
+web.py, templates/        painel web (Flask)
+docs/versoes/v1.html      versão 1 do formulário, para comparação
+vendor/axe.min.js         axe-core (MPL-2.0)
+Dockerfile, railway.toml  deploy no Railway
+.github/workflows/        CI: governança + verificação a cada push
 ```
 
 ## Como rodar
 
-Requisitos: Python 3.11+, `pip install playwright pyyaml`, Google Chrome (ou `EVOSPEC_CHROME=/caminho/do/chrome`) e `npm install` (axe-core).
+### Painel web (local)
+
+```bash
+pip install -r requirements.txt
+python -m playwright install --with-deps chromium
+python web.py            # http://localhost:8000
+```
+
+Ou com Docker: `docker build -t evospec-ux . && docker run -p 8000:8000 evospec-ux`.
+
+### Deploy no Railway
+
+1. No Railway: **New Project → Deploy from GitHub repo → `evospec-ux`**. O `Dockerfile` e o `railway.toml` são detectados automaticamente.
+2. Em **Variables**, defina:
+   - `EVOSPEC_PASSWORD`: senha exigida para ações (registrar evidência, decidir, verificar). Recomendado, porque a URL é pública.
+   - `ANTHROPIC_API_KEY` (opcional): permite que o botão "Gerar proposta (LLM)" chame o modelo. Sem ela, o painel gera o prompt para uso manual.
+   - `SECRET_KEY`: qualquer texto aleatório.
+3. Em **Settings → Networking → Generate Domain** para obter a URL pública. O health check usa `/saude`.
+
+O sistema de arquivos do Railway é temporário: evidências, decisões e execuções feitas pelo painel somem a cada novo deploy, a menos que se adicione um volume montado no diretório do projeto. O registro oficial do ciclo é o histórico do Git.
+
+### Integração contínua
+
+O workflow `.github/workflows/evospec.yml` roda a cada push: regras de governança, autotestes e verificação independente. O build falha se houver erro de governança ou regressão, funcionando como o portão de drift e regressão do método.
+
+### Linha de comando
+
+Requisitos: os mesmos do painel. O axe-core está em `vendor/` (licença MPL-2.0); o Chromium do Playwright é usado por padrão (`EVOSPEC_CHROME` permite indicar outro navegador).
 
 ```bash
 python3 evospec.py status                     # visão geral

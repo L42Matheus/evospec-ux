@@ -1,0 +1,43 @@
+{
+  "label": "r1-v1-antes",
+  "at": "2026-11-06T19:36:41-03:00",
+  "commit": "8ee3bad",
+  "spec_versions": {
+    "SPEC-04": 2,
+    "SPEC-06": 1
+  },
+  "criteria": {
+    "AC-04.1": {
+      "test": "cpf_invalido_bloqueia_envio",
+      "passed": true
+    },
+    "AC-04.2": {
+      "test": "cpf_invalido_exibe_mensagem",
+      "passed": true
+    },
+    "AC-04.3": {
+      "test": "cpf_valido_envia",
+      "passed": true
+    },
+    "AC-04.4": {
+      "test": "foco_vai_para_cpf",
+      "passed": false,
+      "detail": "foco está em '', esperado 'cpf'"
+    },
+    "AC-04.5": {
+      "test": "cpf_marcado_invalido_com_descricao",
+      "passed": false,
+      "detail": "campo CPF sem aria-invalid=true"
+    },
+    "AC-04.6": {
+      "test": "mensagem_em_regiao_viva",
+      "passed": false,
+      "detail": "nenhuma região viva presente no carregamento da página"
+    },
+    "AC-06.1": {
+      "test": "dados_preservados_apos_erro",
+      "passed": true
+    }
+  },
+  "axe_violations": []
+}

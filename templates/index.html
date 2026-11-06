@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EvoSpec-UX · painel</title>
+<style>
+  :root { --tx:#1f1e1d; --mut:#5f5e5a; --bd:#d9d7cf; --bg:#faf9f5; --card:#fff;
+          --pur:#534AB7; --pur-l:#EEEDFE; --ok:#3B6D11; --ok-l:#EAF3DE; --err:#A32D2D; --err-l:#FCEBEB;
+          --warn:#854F0B; --warn-l:#FAEEDA; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--tx); background:var(--bg); line-height:1.5; }
+  header { background:var(--card); border-bottom:1px solid var(--bd); padding:1rem 1.5rem; display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between; }
+  header h1 { font-size:1.25rem; margin:0; font-weight:600; }
+  header p { margin:.15rem 0 0; color:var(--mut); font-size:.9rem; }
+  nav a { margin-left:1rem; color:var(--pur); text-decoration:none; font-size:.9rem; }
+  main { max-width:1100px; margin:0 auto; padding:1.5rem; }
+  section { background:var(--card); border:1px solid var(--bd); border-radius:12px; padding:1.25rem 1.5rem; margin-bottom:1.25rem; }
+  h2 { font-size:1.1rem; margin:0 0 .25rem; }
+  .sub { color:var(--mut); font-size:.88rem; margin:0 0 1rem; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  th, td { text-align:left; padding:.45rem .5rem; border-bottom:1px solid var(--bd); vertical-align:top; }
+  th { font-weight:600; color:var(--mut); font-size:.8rem; }
+  .pill { display:inline-block; padding:.05rem .55rem; border-radius:999px; font-size:.78rem; font-weight:600; }
+  .ok { background:var(--ok-l); color:var(--ok); } .err { background:var(--err-l); color:var(--err); }
+  .warn { background:var(--warn-l); color:var(--warn); } .pur { background:var(--pur-l); color:var(--pur); }
+  .flash { padding:.7rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:.92rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; }
+  .card { border:1px solid var(--bd); border-radius:10px; padding:1rem; }
+  .card h3 { font-size:.98rem; margin:0 0 .4rem; }
+  label { display:block; font-size:.82rem; color:var(--mut); margin-top:.6rem; }
+  input, textarea, select { width:100%; padding:.45rem; border:1px solid var(--bd); border-radius:6px; font:inherit; font-size:.9rem; }
+  textarea { min-height:4.5rem; }
+  button { background:var(--pur); color:#fff; border:0; border-radius:6px; padding:.5rem .9rem; font:inherit; font-size:.9rem; cursor:pointer; margin-top:.75rem; }
+  button.sec { background:#fff; color:var(--pur); border:1px solid var(--pur); }
+  button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:3px solid #7F77DD; outline-offset:2px; }
+  pre { background:#f4f3ee; padding:.75rem; border-radius:8px; overflow:auto; font-size:.8rem; white-space:pre-wrap; }
+  dl { display:grid; grid-template-columns:max-content 1fr; gap:.2rem .8rem; font-size:.88rem; margin:.5rem 0; }
+  dt { color:var(--mut); } dd { margin:0; }
+  details summary { cursor:pointer; color:var(--pur); font-size:.88rem; margin-top:.5rem; }
+  .steps { display:flex; flex-wrap:wrap; gap:.5rem; font-size:.82rem; color:var(--mut); }
+  .steps span { background:var(--pur-l); color:var(--pur); padding:.2rem .6rem; border-radius:999px; }
+  .row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; }
+  .row > * { flex:1; min-width:140px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>EvoSpec-UX</h1>
+    <p>Protótipo de SDD orientado por evidências de usabilidade · PPGTI/IFPB</p>
+  </div>
+  <nav aria-label="Seções">
+    <a href="/app/" target="_blank">Aplicação (atual)</a>
+    <a href="/versoes/v1" target="_blank">Aplicação v1</a>
+    <a href="#especificacoes">Especificações</a>
+    <a href="#evidencias">Evidências</a>
+    <a href="#propostas">Propostas</a>
+    <a href="#verificacao">Verificação</a>
+    <a href="#rastreabilidade">Rastreabilidade</a>
+  </nav>
+</header>
+<main>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in msgs %}
+      <div class="flash {{ 'ok' if cat=='ok' else ('warn' if cat=='aviso' else 'err') }}" role="status">{{ m }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <section aria-labelledby="ciclo">
+    <h2 id="ciclo">Ciclo e governança</h2>
+    <p class="sub">Evidência → proposta (LLM) → decisão humana → especificação versionada → implementação pelo agente → verificação independente.</p>
+    <div class="steps" aria-hidden="true">
+      <span>1. Evidência</span><span>2. Proposta</span><span>3. Decisão</span><span>4. Spec vN+1</span><span>5. Implementação</span><span>6. Verificação</span>
+    </div>
+    <p style="margin-top:1rem">
+      Validação (regras R1–R6):
+      {% if errors %}<span class="pill err">{{ errors|length }} erro(s)</span>{% else %}<span class="pill ok">sem erros</span>{% endif %}
+      {% if warns %}<span class="pill warn">{{ warns|length }} aviso(s)</span>{% endif %}
+      {% if protected %}<span class="pill pur">ações protegidas por senha</span>{% endif %}
+    </p>
+    {% if errors or warns %}
+      <ul style="font-size:.88rem">
+        {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+        {% for w in warns %}<li>{{ w }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+
+  <section id="especificacoes" aria-labelledby="h-spec">
+    <h2 id="h-spec">Especificações</h2>
+    <p class="sub">Fonte da verdade lida pelo agente. Cada nova versão precisa de uma proposta aprovada.</p>
+    <div class="grid">
+    {% for s in specs %}
+      <div class="card">
+        <h3>{{ s.id }} <span class="pill pur">v{{ s.version }}</span></h3>
+        <p style="margin:.2rem 0 .5rem;font-size:.9rem">{{ s.title }}</p>
+        <ul style="font-size:.85rem;padding-left:1.1rem;margin:0">
+          {% for c in s.criteria %}<li><strong>{{ c.id }}</strong> {{ c.text }}</li>{% endfor %}
+        </ul>
+        <details><summary>Histórico de versões</summary>
+          <ul style="font-size:.82rem">{% for h in s.history %}
+            <li>v{{ h.version }} — {{ h.change or ('via ' ~ h.cr ~ ', aprovada por ' ~ h.approved_by) }}</li>{% endfor %}</ul>
+        </details>
+      </div>
+    {% endfor %}
+    </div>
+  </section>
+
+  <section id="evidencias" aria-labelledby="h-evd">
+    <h2 id="h-evd">Evidências de uso</h2>
+    <p class="sub">Achados de testes com usuários, inspeções e percurso cognitivo. Uma evidência não é automaticamente um requisito.</p>
+    <table>
+      <thead><tr><th>ID</th><th>Observado</th><th>Contexto</th><th>Severidade</th><th>Proposta</th></tr></thead>
+      <tbody>
+      {% for e in evid %}
+        <tr>
+          <td><strong>{{ e.id }}</strong></td>
+          <td>{{ e.observed }}</td>
+          <td style="font-size:.82rem">{{ e.participant }} · {{ e.assistive_technology }}<br>{{ e.task }}</td>
+          <td>{{ e.severity }}</td>
+          <td>
+            {% if e.id in used %}<span class="pill ok">vinculada</span>
+            {% else %}
+              <form method="post" action="/propor/{{ e.id }}">
+                <button class="sec" type="submit">{{ 'Gerar proposta (LLM)' if has_llm else 'Gerar prompt' }}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <details style="margin-top:1rem"><summary>Registrar nova evidência</summary>
+      <form method="post" action="/evidencias">
+        <div class="row">
+          <div><label for="ev-part">Participante</label><input id="ev-part" name="participant" placeholder="P4"></div>
+          <div><label for="ev-at">Tecnologia assistiva</label><input id="ev-at" name="assistive_technology" placeholder="NVDA + Chrome"></div>
+          <div><label for="ev-sev">Severidade</label>
+            <select id="ev-sev" name="severity"><option>baixa</option><option selected>média</option><option>alta</option></select></div>
+        </div>
+        <label for="ev-task">Tarefa</label><input id="ev-task" name="task" placeholder="T3 - navegar pelo formulário só com teclado">
+        <label for="ev-obs">Comportamento observado (obrigatório)</label>
+        <textarea id="ev-obs" name="observed" required placeholder="Descreva apenas o que foi visto ou ouvido, sem interpretar."></textarea>
+        <div class="row">
+          <div><label for="ev-imp">Impacto</label><input id="ev-imp" name="impact" placeholder="tarefa concluída com ajuda"></div>
+          <div><label for="ev-wcag">Critérios WCAG (opcional)</label><input id="ev-wcag" name="wcag" placeholder="2.4.3, 3.3.2"></div>
+          <div><label for="ev-src">Fonte</label><input id="ev-src" name="source" placeholder="teste com usuário"></div>
+        </div>
+        <button type="submit">Registrar evidência</button>
+      </form>
+    </details>
+  </section>
+
+  <section id="propostas" aria-labelledby="h-cr">
+    <h2 id="h-cr">Propostas de mudança</h2>
+    <p class="sub">Redigidas com apoio do LLM, separando o observado do inferido. A especificação só muda após decisão humana.</p>
+    {% if prompt %}
+      <div class="flash warn">Prompt gerado: <a href="/prompts/{{ prompt }}" target="_blank">{{ prompt }}</a>. Envie-o a um LLM e salve a resposta como <code>changes/CR-xxx.yaml</code> no repositório, ou configure <code>ANTHROPIC_API_KEY</code>.</div>
+    {% endif %}
+    {% for c in crs %}
+      <div class="card" style="margin-bottom:1rem">
+        <h3>{{ c.id }} · {{ c.change_type }}
+          {% set st = c.decision.status %}
+          <span class="pill {{ 'ok' if st=='approved' else ('err' if st=='rejected' else 'warn') }}">{{ st }}</span></h3>
+        <dl>
+          <dt>Evidência</dt><dd>{{ c.evidence|join(', ') }}</dd>
+          <dt>Specs afetadas</dt><dd>{{ c.affected_specs|join(', ') }}</dd>
+          <dt>Observado</dt><dd>{{ c.observed }}</dd>
+          <dt>Inferido</dt><dd>{{ c.inferred }}</dd>
+          <dt>Justificativa</dt><dd>{{ c.justification }}</dd>
+          <dt>Preservar</dt><dd>{{ c.preserve|join(', ') }}</dd>
+          <dt>Redigida por</dt><dd>{{ c.drafted_by }}</dd>
+          {% if c.decision.by %}<dt>Decisão</dt><dd>{{ c.decision.status }} por {{ c.decision.by }} em {{ c.decision.at }}{% if c.decision.note %} — {{ c.decision.note }}{% endif %}</dd>{% endif %}
+        </dl>
+        <details><summary>Alterações propostas na especificação</summary><pre>{{ c.spec_changes|yaml }}</pre></details>
+        {% if c.decision.status == 'pending' %}
+          <form method="post" action="/decidir/{{ c.id }}" class="row" style="margin-top:.5rem">
+            <div><label for="by-{{ c.id }}">Responsável</label><input id="by-{{ c.id }}" name="by" required></div>
+            <div><label for="dec-{{ c.id }}">Decisão</label>
+              <select id="dec-{{ c.id }}" name="decision">
+                <option value="approved">Aprovar</option><option value="clarification">Pedir esclarecimento</option>
+                <option value="deferred">Postergar</option><option value="rejected">Rejeitar</option></select></div>
+            <div><label for="note-{{ c.id }}">Nota</label><input id="note-{{ c.id }}" name="note"></div>
+            <div><button type="submit">Registrar decisão</button></div>
+          </form>
+        {% endif %}
+      </div>
+    {% else %}
+      <p class="sub">Nenhuma proposta ainda.</p>
+    {% endfor %}
+  </section>
+
+  <section id="verificacao" aria-labelledby="h-ver">
+    <h2 id="h-ver">Verificação independente</h2>
+    <p class="sub">Robô (Playwright + Chromium) executa os testes de aceitação de cada critério e o axe-core varre a página. Regressões são comparadas com a linha de base.</p>
+    <form method="post" action="/verificar" class="row">
+      <div><label for="v-label">Rótulo da execução</label><input id="v-label" name="label" placeholder="rodada-2"></div>
+      <div><label><input type="checkbox" name="baseline" value="1" style="width:auto"> atualizar linha de base se não houver regressões</label></div>
+      <div><button type="submit">Rodar verificação</button></div>
+    </form>
+    {% if last %}
+      <h3 style="font-size:.95rem;margin:1.2rem 0 .3rem">Última execução: {{ last.label }} <span class="sub">({{ last.at }}{% if last.commit %}, commit {{ last.commit }}{% endif %})</span></h3>
+      <table>
+        <thead><tr><th>Critério</th><th>Teste</th><th>Resultado</th><th>Detalhe</th></tr></thead>
+        <tbody>
+        {% for ac, r in last.criteria|dictsort %}
+          <tr><td>{{ ac }}</td><td><code>{{ r.test }}</code></td>
+            <td>{% if r.passed %}<span class="pill ok">passa</span>{% else %}<span class="pill err">falha</span>{% endif %}
+                {% if ac in regressions %}<span class="pill err">regressão</span>{% endif %}</td>
+            <td style="font-size:.82rem">{{ r.detail or '' }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p style="font-size:.9rem">axe-core: <strong>{{ last.axe_violations|length }}</strong> violação(ões) automática(s)
+        {% for v in last.axe_violations %}<span class="pill warn">{{ v.id }}</span>{% endfor %}</p>
+    {% else %}
+      <p class="sub">Nenhuma execução registrada ainda.</p>
+    {% endif %}
+    {% if runs %}
+      <details><summary>Histórico de execuções ({{ runs|length }})</summary>
+        <table><thead><tr><th>Rótulo</th><th>Quando</th><th>Commit</th><th>Critérios</th><th>axe-core</th></tr></thead><tbody>
+        {% for r in runs %}<tr><td>{{ r.label }}</td><td>{{ r.at }}</td><td>{{ r.commit or '—' }}</td><td>{{ r.passed }}/{{ r.total }}</td><td>{{ r.axe }}</td></tr>{% endfor %}
+        </tbody></table>
+      </details>
+    {% endif %}
+  </section>
+
+  <section id="rastreabilidade" aria-labelledby="h-tr">
+    <h2 id="h-tr">Matriz de rastreabilidade</h2>
+    <p class="sub">Critério → especificação@versão → evidência → proposta → teste → resultado na linha de base{% if base and base.commit %} (commit {{ base.commit }}){% endif %}.</p>
+    <table>
+      <thead><tr><th>Critério</th><th>Spec</th><th>Evidência</th><th>Proposta</th><th>Teste</th><th>Linha de base</th></tr></thead>
+      <tbody>
+      {% for r in rows %}
+        <tr><td title="{{ r.text }}"><strong>{{ r.criterion }}</strong></td><td>{{ r.spec }}@{{ r.version }}</td>
+          <td>{{ r.evidence|join(', ') or '— (versão inicial)' }}</td>
+          <td>{% if r.cr %}{{ r.cr }} ({{ r.decision.status }}){% else %}—{% endif %}</td>
+          <td>{% if r.tests %}<code>{{ r.tests|join(', ') }}</code>{% else %}<span class="pill err">sem teste</span>{% endif %}</td>
+          <td>{% if r.result is none %}—{% elif r.result %}<span class="pill ok">passa</span>{% else %}<span class="pill err">falha</span>{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <p class="sub" style="text-align:center">Protótipo exploratório de pesquisa. As evidências de exemplo são ilustrativas. Os dados deste painel são temporários no Railway sem volume persistente; o histórico oficial fica no Git.</p>
+</main>
+</body>
+</html>

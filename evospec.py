@@ -28,8 +28,12 @@ ROOT = Path(__file__).resolve().parent
 SPECS, EVID, CHANGES, RESULTS = (ROOT / d for d in ("specs", "evidence", "changes", "results"))
 APP = ROOT / "app"
 TESTS = ROOT / "tests" / "acceptance.py"
-AXE = ROOT / "node_modules" / "axe-core" / "axe.min.js"
-CHROME = os.environ.get("EVOSPEC_CHROME", "/usr/bin/google-chrome")
+AXE = ROOT / "vendor" / "axe.min.js"   # axe-core (MPL-2.0), ver vendor/axe-core-LICENSE.txt
+CHROME = os.environ.get("EVOSPEC_CHROME")  # opcional; sem ele usa o Chromium do Playwright
+
+
+class EvoSpecError(Exception):
+    """Erro de uso do método (proposta inexistente, decisão inválida etc.)."""
 DECISIONS = {"pending", "approved", "rejected", "clarification", "deferred"}
 
 
@@ -196,7 +200,7 @@ Responda apenas com o YAML."""
 def propose(evd_id, model):
     evid = load_dir(EVID)
     if evd_id not in evid:
-        sys.exit(f"evidência {evd_id} não encontrada")
+        raise EvoSpecError(f"evidência {evd_id} não encontrada")
     n = len(list(CHANGES.glob("CR-*.yaml"))) + 1
     cr_id = f"CR-{n:03d}"
     prompt = PROMPT.format(
@@ -208,9 +212,7 @@ def propose(evd_id, model):
         out = CHANGES / "prompts" / f"{cr_id}-{evd_id}.md"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(prompt)
-        print(f"ANTHROPIC_API_KEY não definida. Prompt salvo em {out.relative_to(ROOT)};\n"
-              f"cole a resposta do modelo em changes/{cr_id}.yaml.")
-        return
+        return {"cr": None, "prompt_file": out.relative_to(ROOT).as_posix(), "prompt": prompt}
     req = urllib.request.Request(
         "https://api.anthropic.com/v1/messages",
         data=json.dumps({"model": model, "max_tokens": 2000,
@@ -221,20 +223,23 @@ def propose(evd_id, model):
     data = yaml.safe_load(text)
     data["decision"] = {"status": "pending"}
     data["drafted_by"] = f"llm:{model}"
+    data["id"] = cr_id
     dump(CHANGES / f"{cr_id}.yaml", data)
-    print(f"Rascunho salvo em changes/{cr_id}.yaml (status: pending)")
+    return {"cr": cr_id, "prompt_file": None, "prompt": prompt}
 
 
 # ---------------------------------------------------------------- decide
 def decide(cr_id, by, decision, note):
     crs, specs = load_dir(CHANGES), load_dir(SPECS)
     if cr_id not in crs:
-        sys.exit(f"proposta {cr_id} não encontrada")
+        raise EvoSpecError(f"proposta {cr_id} não encontrada")
     path, cr = crs[cr_id]
     if decision not in DECISIONS - {"pending"}:
-        sys.exit(f"decisão inválida: {decision}")
+        raise EvoSpecError(f"decisão inválida: {decision}")
+    if not by.strip():
+        raise EvoSpecError("informe o nome do responsável pela decisão")
     if cr.get("decision", {}).get("status") == "approved":
-        sys.exit(f"{cr_id} já foi aprovada")
+        raise EvoSpecError(f"{cr_id} já foi aprovada")
     cr["decision"] = {"status": decision, "by": by, "at": now(), "note": note}
     if decision == "approved":
         diffs = []
@@ -246,7 +251,7 @@ def decide(cr_id, by, decision, note):
                 existing[c["id"]]["text"] = c["text"]
             for c in ch.get("add_criteria", []):
                 if c["id"] in existing:
-                    sys.exit(f"{c['id']} já existe em {ch['spec']}")
+                    raise EvoSpecError(f"{c['id']} já existe em {ch['spec']}")
                 s["criteria"].append({"id": c["id"], "text": c["text"]})
             if ch.get("description"):
                 s["description"] = ch["description"]
@@ -258,9 +263,8 @@ def decide(cr_id, by, decision, note):
                                           f"a/specs/{spath.name}", f"b/specs/{spath.name}")
         (CHANGES / "diffs").mkdir(exist_ok=True)
         (CHANGES / "diffs" / f"{cr_id}.diff").write_text("".join(diffs))
-        print("".join(diffs))
     dump(path, cr)
-    print(f"{cr_id}: decisão '{decision}' registrada por {by}")
+    return "".join(diffs) if decision == "approved" else ""
 
 
 # ---------------------------------------------------------------- verify
@@ -272,7 +276,8 @@ def verify(label, set_baseline):
     url = (APP / "index.html").as_uri()
     results = {}
     with sync_playwright() as p:
-        browser = p.chromium.launch(executable_path=CHROME, args=["--no-sandbox"])
+        kwargs = {"executable_path": CHROME} if CHROME and Path(CHROME).exists() else {}
+        browser = p.chromium.launch(args=["--no-sandbox"], **kwargs)
         for ac, fns in sorted(tests.items()):
             for fn in fns:
                 page = browser.new_page()
@@ -304,24 +309,57 @@ def verify(label, set_baseline):
     regressions = [ac for ac, r in results.items()
                    if base and base["criteria"].get(ac, {}).get("passed") and not r["passed"]]
 
-    print(f"== Verificação independente: {label} (commit {run['commit']}) ==")
-    for ac, r in sorted(results.items()):
+    baseline_set = False
+    if set_baseline and not regressions:
+        base_path.write_text(json.dumps(run, ensure_ascii=False, indent=2))
+        baseline_set = True
+    return run, regressions, baseline_set
+
+
+def print_run(run, regressions, set_baseline, baseline_set):
+    print(f"== Verificação independente: {run['label']} (commit {run['commit']}) ==")
+    for ac, r in sorted(run["criteria"].items()):
         mark = "PASSA" if r["passed"] else "FALHA"
         flag = "  <-- REGRESSÃO" if ac in regressions else ""
         print(f"  {mark}  {ac:8} {r['test']}{flag}" + ("" if r["passed"] else f"\n           {r.get('detail', '')}"))
+    axe = run["axe_violations"]
     print(f"  axe-core: {len(axe)} violação(ões) WCAG automática(s)" +
           "".join(f"\n           {v['id']} ({v['impact']}, {v['nodes']} nó(s))" for v in axe))
     print(f"  Regressões em relação à linha de base: {len(regressions)}")
-
     if set_baseline:
-        if regressions:
-            sys.exit("Linha de base NÃO atualizada: há regressões.")
-        base_path.write_text(json.dumps(run, ensure_ascii=False, indent=2))
-        print("  Linha de base atualizada.")
-    return run, regressions
+        print("  Linha de base atualizada." if baseline_set else "  Linha de base NÃO atualizada: há regressões.")
 
 
 # ---------------------------------------------------------------- trace
+def trace_rows():
+    """Linhas da matriz: critério → spec@versão → evidência → proposta → teste → resultado."""
+    specs, crs = load_dir(SPECS), load_dir(CHANGES)
+    tests = load_tests().CRITERIA
+    base = load_baseline()
+    origin = {}
+    for cid, (_, cr) in crs.items():
+        for ch in cr.get("spec_changes", []):
+            for c in ch.get("add_criteria", []) + ch.get("modify_criteria", []):
+                origin[c["id"]] = (cid, cr)
+    rows = []
+    for sid, (_, s) in specs.items():
+        for c in s["criteria"]:
+            cid, cr = origin.get(c["id"], (None, {}))
+            r = base["criteria"].get(c["id"]) if base else None
+            rows.append({
+                "criterion": c["id"], "text": c["text"], "spec": sid, "version": s["version"],
+                "evidence": cr.get("evidence", []) if cr else [], "cr": cid,
+                "decision": cr.get("decision", {}) if cr else {},
+                "tests": [f.__name__ for f in tests.get(c["id"], [])],
+                "result": None if r is None else r["passed"]})
+    return rows
+
+
+def load_baseline():
+    p = RESULTS / "baseline.json"
+    return json.loads(p.read_text()) if p.exists() else None
+
+
 def trace():
     specs, evid, crs = load_dir(SPECS), load_dir(EVID), load_dir(CHANGES)
     tests = load_tests().CRITERIA
@@ -379,17 +417,33 @@ def main():
     p.add_argument("--decision", required=True); p.add_argument("--note", default="")
     p = sub.add_parser("verify"); p.add_argument("--label", default="atual"); p.add_argument("--set-baseline", action="store_true")
     a = ap.parse_args()
+    try:
+        run_cli(a)
+    except EvoSpecError as exc:
+        sys.exit(f"erro: {exc}")
+
+
+def run_cli(a):
     if a.cmd == "status":
         status()
     elif a.cmd == "validate":
         errors, _ = validate()
         sys.exit(1 if errors else 0)
     elif a.cmd == "propose":
-        propose(a.evidence, a.model)
+        out = propose(a.evidence, a.model)
+        if out["cr"]:
+            print(f"Rascunho salvo em changes/{out['cr']}.yaml (status: pending)")
+        else:
+            print(f"ANTHROPIC_API_KEY não definida. Prompt salvo em {out['prompt_file']};\n"
+                  f"cole a resposta do modelo em um novo arquivo changes/CR-xxx.yaml.")
     elif a.cmd == "decide":
-        decide(a.cr, a.by, a.decision, a.note)
+        diff = decide(a.cr, a.by, a.decision, a.note)
+        print(diff + f"{a.cr}: decisão '{a.decision}' registrada por {a.by}")
     elif a.cmd == "verify":
-        verify(a.label, a.set_baseline)
+        run, regs, ok = verify(a.label, a.set_baseline)
+        print_run(run, regs, a.set_baseline, ok)
+        if a.set_baseline and not ok:
+            sys.exit(1)
     elif a.cmd == "trace":
         trace()
 
