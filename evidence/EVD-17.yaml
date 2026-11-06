@@ -4,11 +4,10 @@ method: teste de usabilidade com tecnologia assistiva
 participant: P3
 assistive_technology: leitor de tela (NVDA + Chrome)
 task: T2 - enviar inscrição com CPF digitado incorretamente e corrigi-lo
-observed: >
-  O participante acionou "Continuar" três vezes sem perceber a mensagem de erro
-  do campo CPF. O leitor de tela não verbalizou nenhuma mensagem após o envio.
-  O participante precisou de ajuda do moderador para concluir a tarefa.
+observed: O participante acionou "Continuar" três vezes sem perceber a mensagem de erro do campo CPF. O leitor de tela não verbalizou nenhuma mensagem após o envio. O participante precisou de ajuda do moderador para concluir a tarefa.
 impact: tarefa interrompida; ajuda necessária
-severity: alta   # atribuída pelo avaliador
-wcag: ["3.3.1", "4.1.3"]
+severity: alta
+wcag:
+- 3.3.1
+- 4.1.3
 notes: Exemplo ilustrativo do pré-projeto; não corresponde a um experimento realizado.

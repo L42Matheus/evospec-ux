@@ -38,8 +38,18 @@ def load_dir(d):
     return {y["id"]: (p, y) for p in sorted(d.glob("*.yaml")) for y in [yaml.safe_load(p.read_text())]}
 
 
+def _clean(x):
+    if isinstance(x, str):
+        return " ".join(x.split())
+    if isinstance(x, list):
+        return [_clean(i) for i in x]
+    if isinstance(x, dict):
+        return {k: _clean(v) for k, v in x.items()}
+    return x
+
+
 def dump(path, data):
-    path.write_text(yaml.safe_dump(data, allow_unicode=True, sort_keys=False, width=100))
+    path.write_text(yaml.safe_dump(_clean(data), allow_unicode=True, sort_keys=False, width=1000))
 
 
 def load_tests():

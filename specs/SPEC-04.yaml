@@ -2,16 +2,14 @@ id: SPEC-04
 title: Validação do CPF na matrícula
 version: 1
 status: active
-description: >
-  O estudante deve informar o CPF e receber uma mensagem de validação
-  quando necessário.
+description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário.
 criteria:
-  - id: AC-04.1
-    text: Ao acionar "Continuar" com CPF inválido, a inscrição não é enviada.
-  - id: AC-04.2
-    text: Ao acionar "Continuar" com CPF inválido, uma mensagem de erro é exibida.
-  - id: AC-04.3
-    text: Ao acionar "Continuar" com CPF válido e demais campos preenchidos, a inscrição é enviada.
+- id: AC-04.1
+  text: Ao acionar "Continuar" com CPF inválido, a inscrição não é enviada.
+- id: AC-04.2
+  text: Ao acionar "Continuar" com CPF inválido, uma mensagem de erro é exibida.
+- id: AC-04.3
+  text: Ao acionar "Continuar" com CPF válido e demais campos preenchidos, a inscrição é enviada.
 history:
-  - version: 1
-    change: versão inicial
+- version: 1
+  change: versão inicial

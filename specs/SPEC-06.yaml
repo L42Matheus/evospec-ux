@@ -2,11 +2,10 @@ id: SPEC-06
 title: Preservação dos dados preenchidos
 version: 1
 status: active
-description: >
-  Erros de validação não devem apagar os dados já informados pelo estudante.
+description: Erros de validação não devem apagar os dados já informados pelo estudante.
 criteria:
-  - id: AC-06.1
-    text: Após um erro de validação do CPF, os campos nome, CPF e e-mail mantêm os valores informados.
+- id: AC-06.1
+  text: Após um erro de validação do CPF, os campos nome, CPF e e-mail mantêm os valores informados.
 history:
-  - version: 1
-    change: versão inicial
+- version: 1
+  change: versão inicial
