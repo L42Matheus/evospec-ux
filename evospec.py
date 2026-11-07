@@ -294,28 +294,32 @@ def decide(cr_id, by, decision, note):
 def verify(label, set_baseline):
     from playwright.sync_api import sync_playwright
 
-    tests = load_tests().CRITERIA
+    mod = load_tests()
+    tests = mod.CRITERIA
     specs = load_specs()
-    url = (APP / "index.html").as_uri()
+    # O módulo de testes pode definir START_URL (página aberta antes de cada teste) e
+    # axe_setup(page) (estado da página para a varredura do axe-core).
+    url = getattr(mod, "START_URL", None) or (APP / "index.html").as_uri()
     results = {}
     with sync_playwright() as p:
         kwargs = {"executable_path": CHROME} if CHROME and Path(CHROME).exists() else {}
         browser = p.chromium.launch(args=["--no-sandbox"], **kwargs)
         for ac, fns in sorted(tests.items()):
             for fn in fns:
-                page = browser.new_page()
+                context = browser.new_context()
+                page = context.new_page()
                 page.goto(url)
                 try:
                     fn(page)
                     results[ac] = {"test": fn.__name__, "passed": True}
                 except Exception as exc:  # falha ou erro do teste
                     results[ac] = {"test": fn.__name__, "passed": False, "detail": str(exc).splitlines()[0]}
-                page.close()
-        # varredura automática de acessibilidade no estado de erro
+                context.close()
+        # varredura automática de acessibilidade
         page = browser.new_page()
         page.goto(url)
-        page.fill("#cpf", "000")
-        page.get_by_role("button", name="Continuar").click()
+        if hasattr(mod, "axe_setup"):
+            mod.axe_setup(page)
         page.add_script_tag(path=str(AXE))
         axe = page.evaluate("async () => (await axe.run(document, {runOnly: ['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa']})).violations"
                             ".map(v => ({id: v.id, impact: v.impact, nodes: v.nodes.length}))")

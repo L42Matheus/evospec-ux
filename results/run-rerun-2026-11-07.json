@@ -1,0 +1,40 @@
+{
+  "label": "rerun-2026-11-07",
+  "at": "2026-11-07T10:24:11-03:00",
+  "commit": "c5ad0c6",
+  "spec_versions": {
+    "001-validacao-cpf": 2,
+    "002-preservacao-dados": 1
+  },
+  "criteria": {
+    "001/FR-001": {
+      "test": "cpf_invalido_bloqueia_envio",
+      "passed": true
+    },
+    "001/FR-002": {
+      "test": "cpf_invalido_exibe_mensagem",
+      "passed": true
+    },
+    "001/FR-003": {
+      "test": "cpf_valido_envia",
+      "passed": true
+    },
+    "001/FR-004": {
+      "test": "foco_vai_para_cpf",
+      "passed": true
+    },
+    "001/FR-005": {
+      "test": "cpf_marcado_invalido_com_descricao",
+      "passed": true
+    },
+    "001/FR-006": {
+      "test": "mensagem_em_regiao_viva",
+      "passed": true
+    },
+    "002/FR-001": {
+      "test": "dados_preservados_apos_erro",
+      "passed": true
+    }
+  },
+  "axe_violations": []
+}

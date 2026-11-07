@@ -21,6 +21,12 @@ def criterion(ac_id):
     return wrap
 
 
+def axe_setup(page):
+    """Estado da página para a varredura do axe-core: erro de CPF exibido."""
+    page.fill("#cpf", "000")
+    page.get_by_role("button", name="Continuar").click()
+
+
 def preencher(page, cpf):
     page.fill("#nome", "Maria da Silva")
     page.fill("#cpf", cpf)
