@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<!-- @spec 001-inscricao-matricula@1.0.0 -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscrição escolar</title>
+<style>
+/* @spec 001-inscricao-matricula@1.0.0 */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f4f5f7;
+}
+
+main {
+  max-width: 36rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+h1 { font-size: 1.75rem; margin: 0 0 0.5rem; color: #1a1a1a; }
+h2 { font-size: 1.5rem; margin: 0 0 0.5rem; color: #1b5e20; }
+
+.instrucoes { margin: 0 0 1.25rem; color: #3d3d3d; }
+
+.campo { margin-bottom: 1.25rem; }
+
+label { display: block; font-weight: 600; margin-bottom: 0.25rem; color: #1a1a1a; }
+
+.dica { margin: 0 0 0.25rem; font-size: 0.9375rem; color: #4a4a4a; }
+
+input {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  color: #1a1a1a;
+  background: #ffffff;
+  border: 2px solid #6b6b6b; /* contraste >= 3:1 com o fundo (WCAG 1.4.11) */
+  border-radius: 4px;
+}
+
+input[aria-invalid="true"] {
+  border-color: #b00020;
+  border-width: 3px; /* erro indicado também pela espessura, além do texto */
+}
+
+.erro {
+  margin: 0.25rem 0 0;
+  font-weight: 600;
+  color: #b00020;
+}
+.erro:empty { display: none; }
+.erro:not(:empty)::before { content: "Erro: "; }
+
+.resumo-erros {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #b00020;
+  border-radius: 4px;
+  color: #1a1a1a;
+  background: #fdecee;
+  font-weight: 600;
+}
+.resumo-erros:empty { display: none; }
+
+button {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding: 0.5rem 1.5rem;
+  font: inherit;
+  font-weight: 600;
+  color: #ffffff;
+  background: #0b4f9c;
+  border: 2px solid #0b4f9c;
+  border-radius: 4px;
+  cursor: pointer;
+}
+button:hover { background: #083a73; border-color: #083a73; }
+
+/* Foco sempre visível (WCAG 2.4.7 / 2.4.11) */
+input:focus, button:focus, [tabindex="-1"]:focus {
+  outline: 3px solid #1a1a1a;
+  outline-offset: 2px;
+}
+input:focus { box-shadow: 0 0 0 5px #ffd54f; }
+button:focus { box-shadow: 0 0 0 5px #ffd54f; }
+
+.confirmacao {
+  padding: 1rem;
+  border: 2px solid #1b5e20;
+  border-radius: 4px;
+  background: #edf7ee;
+  color: #1a1a1a;
+}
+.confirmacao p { margin: 0 0 1rem; }
+
+[hidden] { display: none !important; }
+
+@media (max-width: 30rem) {
+  main { margin: 0; border-radius: 0; box-shadow: none; padding: 1rem; }
+  button { width: 100%; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Inscrição escolar</h1>
+
+  <form id="form-inscricao" novalidate>
+    <p class="instrucoes">Preencha seus dados para a matrícula. Todos os campos são obrigatórios.</p>
+
+    <div id="resumo-erros" class="resumo-erros" role="alert"></div>
+
+    <div class="campo">
+      <label for="nome">Nome completo</label>
+      <input id="nome" name="nome" type="text" autocomplete="name" required
+             aria-describedby="nome-erro">
+      <p id="nome-erro" class="erro"></p>
+    </div>
+
+    <div class="campo">
+      <label for="cpf">CPF</label>
+      <p id="cpf-dica" class="dica">Somente números ou no formato 000.000.000-00.</p>
+      <input id="cpf" name="cpf" type="text" inputmode="numeric" autocomplete="off" required
+             aria-describedby="cpf-dica cpf-erro">
+      <p id="cpf-erro" class="erro"></p>
+    </div>
+
+    <div class="campo">
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="email" required
+             aria-describedby="email-erro">
+      <p id="email-erro" class="erro"></p>
+    </div>
+
+    <button id="continuar" type="submit">Continuar</button>
+  </form>
+
+  <section id="confirmacao" class="confirmacao" role="status" hidden>
+    <h2 id="confirmacao-titulo" tabindex="-1">Inscrição enviada com sucesso!</h2>
+    <p id="confirmacao-texto"></p>
+    <button id="nova-inscricao" type="button">Nova inscrição</button>
+  </section>
+</main>
+
+<script>
+// @spec 001-inscricao-matricula@1.0.0
+(function () {
+  "use strict";
+
+  var MENSAGENS = {
+    nomeVazio: "Informe seu nome completo.",
+    cpfVazio: "Informe seu CPF.",
+    cpfInvalido: "CPF inválido. Verifique os números digitados.",
+    emailVazio: "Informe seu e-mail.",
+    emailInvalido: "Informe um e-mail válido, por exemplo nome@dominio.com."
+  };
+
+  var FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // FR-002, FR-003: validação pelos dois dígitos verificadores (módulo 11).
+  function validarCPF(valor) {
+    var d = String(valor == null ? "" : valor).replace(/\D/g, "");
+    if (d.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(d)) return false; // todos os dígitos iguais
+
+    function digitoVerificador(qtd) {
+      var soma = 0;
+      for (var i = 0; i < qtd; i++) soma += Number(d[i]) * (qtd + 1 - i);
+      var resto = (soma * 10) % 11;
+      return resto === 10 ? 0 : resto;
+    }
+
+    return digitoVerificador(9) === Number(d[9]) && digitoVerificador(10) === Number(d[10]);
+  }
+
+  window.validarCPF = validarCPF;
+  window.inscricoesEnviadas = [];
+
+  var form = document.getElementById("form-inscricao");
+  var resumo = document.getElementById("resumo-erros");
+  var confirmacao = document.getElementById("confirmacao");
+  var confirmacaoTitulo = document.getElementById("confirmacao-titulo");
+  var confirmacaoTexto = document.getElementById("confirmacao-texto");
+  var botaoNova = document.getElementById("nova-inscricao");
+  var campos = {
+    nome: document.getElementById("nome"),
+    cpf: document.getElementById("cpf"),
+    email: document.getElementById("email")
+  };
+  var ORDEM = ["nome", "cpf", "email"];
+  var enviada = false; // FR-011
+
+  // Regras por campo: obrigatoriedade antes do formato (data-model.md).
+  function validarCampo(nome, valor) {
+    if (nome === "nome") return valor ? "" : MENSAGENS.nomeVazio;
+    if (nome === "cpf") {
+      if (!valor) return MENSAGENS.cpfVazio;
+      return validarCPF(valor) ? "" : MENSAGENS.cpfInvalido;
+    }
+    if (!valor) return MENSAGENS.emailVazio;
+    return FORMATO_EMAIL.test(valor) ? "" : MENSAGENS.emailInvalido;
+  }
+
+  function mostrarErro(nome, mensagem) {
+    var campo = campos[nome];
+    document.getElementById(nome + "-erro").textContent = mensagem;
+    if (mensagem) campo.setAttribute("aria-invalid", "true");
+    else campo.removeAttribute("aria-invalid"); // FR-010
+  }
+
+  function limparErros() {
+    ORDEM.forEach(function (nome) { mostrarErro(nome, ""); });
+    resumo.textContent = "";
+  }
+
+  function enviar(dados) {
+    var inscricao = {
+      nome: dados.nome,
+      cpf: dados.cpf.replace(/\D/g, ""),
+      email: dados.email,
+      enviadaEm: new Date().toISOString(),
+      situacao: "enviada"
+    };
+    // Envio simulado no cliente (research.md R2): nenhum dado sai do navegador.
+    window.inscricoesEnviadas.push(inscricao);
+    document.dispatchEvent(new CustomEvent("inscricao:enviada", { detail: inscricao }));
+    return inscricao;
+  }
+
+  function exibirConfirmacao(inscricao) {
+    confirmacaoTexto.textContent = inscricao.nome +
+      ", recebemos sua inscrição. Ela será analisada pela secretaria acadêmica.";
+    form.hidden = true;
+    confirmacao.hidden = false;
+    confirmacaoTitulo.focus();
+  }
+
+  form.addEventListener("submit", function (evento) {
+    evento.preventDefault();
+    if (enviada) return; // FR-011
+
+    var dados = {};
+    var primeiroInvalido = null;
+    var totalErros = 0;
+
+    ORDEM.forEach(function (nome) {
+      var valor = campos[nome].value.trim();
+      dados[nome] = valor;
+      var mensagem = validarCampo(nome, valor);
+      mostrarErro(nome, mensagem);
+      if (mensagem) {
+        totalErros++;
+        if (!primeiroInvalido) primeiroInvalido = campos[nome];
+      }
+    });
+
+    if (totalErros > 0) {
+      resumo.textContent = totalErros === 1
+        ? "Há 1 campo com erro. Corrija-o para continuar."
+        : "Há " + totalErros + " campos com erro. Corrija-os para continuar.";
+      primeiroInvalido.focus();
+      return;
+    }
+
+    resumo.textContent = "";
+    enviada = true;
+    exibirConfirmacao(enviar(dados));
+  });
+
+  botaoNova.addEventListener("click", function () {
+    form.reset();
+    limparErros();
+    enviada = false;
+    confirmacao.hidden = true;
+    form.hidden = false;
+    campos.nome.focus();
+  });
+})();
+</script>
+</body>
+</html>

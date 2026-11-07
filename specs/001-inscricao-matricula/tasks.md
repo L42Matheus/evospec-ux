@@ -35,9 +35,9 @@ implementação.
 
 **Purpose**: estrutura do projeto e infraestrutura de testes
 
-- [ ] T001 Criar o esqueleto de `app/index.html` (`<!DOCTYPE html>`, `<html lang="pt-BR">`, `<meta charset="utf-8">`, `<meta name="viewport">`, `<title>Inscrição escolar</title>`, `<main>`, blocos `<style>` e `<script>` vazios) com o comentário `@spec 001-inscricao-matricula@1.0.0` no HTML, no CSS e no JS
-- [ ] T002 [P] Criar `tests/conftest.py` com fixture `pagina` (Playwright síncrono, Chrome/Chromium headless, abre `file://<raiz>/app/index.html`) e cabeçalho `@spec 001-inscricao-matricula@1.0.0`
-- [ ] T003 [P] Criar `pytest.ini` na raiz com `testpaths = tests`
+- [X] T001 Criar o esqueleto de `app/index.html` (`<!DOCTYPE html>`, `<html lang="pt-BR">`, `<meta charset="utf-8">`, `<meta name="viewport">`, `<title>Inscrição escolar</title>`, `<main>`, blocos `<style>` e `<script>` vazios) com o comentário `@spec 001-inscricao-matricula@1.0.0` no HTML, no CSS e no JS
+- [X] T002 [P] Criar `tests/conftest.py` com fixture `pagina` (Playwright síncrono, Chrome/Chromium headless, abre `file://<raiz>/app/index.html`) e cabeçalho `@spec 001-inscricao-matricula@1.0.0`
+- [X] T003 [P] Criar `pytest.ini` na raiz com `testpaths = tests`
 
 ---
 
@@ -45,8 +45,8 @@ implementação.
 
 **Purpose**: marcação do formulário conforme `contracts/ui-contract.md`, necessária a todas as histórias
 
-- [ ] T004 Em `app/index.html`, criar `form#form-inscricao` com `novalidate`, `h1` "Inscrição escolar", campos `input#nome` (`type="text"`, `autocomplete="name"`, rótulo "Nome completo"), `input#cpf` (`type="text"`, `inputmode="numeric"`, rótulo "CPF", dica `#cpf-dica`), `input#email` (`type="email"`, `autocomplete="email"`, rótulo "E-mail"), parágrafos de erro vazios `#nome-erro`, `#cpf-erro`, `#email-erro` ligados por `aria-describedby`, região `#resumo-erros` (`role="alert"`), `button#continuar` (`type="submit"`, "Continuar") e seção `#confirmacao` (`role="status"`, `hidden`) com `#confirmacao-titulo` (`tabindex="-1"`), `#confirmacao-texto` e `button#nova-inscricao`
-- [ ] T005 Em `app/index.html`, CSS base acessível: contraste de texto ≥ 4.5:1, foco visível (`:focus-visible` com contorno ≥ 2px e contraste ≥ 3:1), alvos ≥ 24×24 px, estado de erro indicado por texto + borda (não só cor), layout responsivo
+- [X] T004 Em `app/index.html`, criar `form#form-inscricao` com `novalidate`, `h1` "Inscrição escolar", campos `input#nome` (`type="text"`, `autocomplete="name"`, rótulo "Nome completo"), `input#cpf` (`type="text"`, `inputmode="numeric"`, rótulo "CPF", dica `#cpf-dica`), `input#email` (`type="email"`, `autocomplete="email"`, rótulo "E-mail"), parágrafos de erro vazios `#nome-erro`, `#cpf-erro`, `#email-erro` ligados por `aria-describedby`, região `#resumo-erros` (`role="alert"`), `button#continuar` (`type="submit"`, "Continuar") e seção `#confirmacao` (`role="status"`, `hidden`) com `#confirmacao-titulo` (`tabindex="-1"`), `#confirmacao-texto` e `button#nova-inscricao`
+- [X] T005 Em `app/index.html`, CSS base acessível: contraste de texto ≥ 4.5:1, foco visível (`:focus-visible` com contorno ≥ 2px e contraste ≥ 3:1), alvos ≥ 24×24 px, estado de erro indicado por texto + borda (não só cor), layout responsivo
 
 **Checkpoint**: estrutura pronta — histórias podem começar
 
@@ -60,17 +60,17 @@ implementação.
 
 ### Testes da User Story 1 (escrever primeiro; devem FALHAR)
 
-- [ ] T006 [P] [US1] Em `tests/test_inscricao.py`, `test_fr001_formulario_tem_campos_rotulados_e_botao_continuar` (rótulos associados a `#nome`, `#cpf`, `#email`; botão com texto "Continuar")
-- [ ] T007 [P] [US1] Em `tests/test_inscricao.py`, `test_fr007_envia_com_dados_validos` (com e sem máscara no CPF; `window.inscricoesEnviadas` ganha exatamente 1 item com `cpf` = "52998224725", `situacao` = "enviada")
-- [ ] T008 [P] [US1] Em `tests/test_inscricao.py`, `test_fr008_confirmacao_exibe_nome` (`#confirmacao` visível, título "Inscrição enviada com sucesso!", texto contém o nome; formulário oculto)
-- [ ] T009 [P] [US1] Em `tests/test_inscricao.py`, `test_fr009_confirmacao_anunciada_e_focada` (`#confirmacao` com `role="status"`; foco em `#confirmacao-titulo`)
-- [ ] T010 [P] [US1] Em `tests/test_inscricao.py`, `test_fr011_sem_envio_duplicado` (após envio, Enter/clique repetidos não aumentam `inscricoesEnviadas`; "Nova inscrição" reexibe formulário vazio)
+- [X] T006 [P] [US1] Em `tests/test_inscricao.py`, `test_fr001_formulario_tem_campos_rotulados_e_botao_continuar` (rótulos associados a `#nome`, `#cpf`, `#email`; botão com texto "Continuar")
+- [X] T007 [P] [US1] Em `tests/test_inscricao.py`, `test_fr007_envia_com_dados_validos` (com e sem máscara no CPF; `window.inscricoesEnviadas` ganha exatamente 1 item com `cpf` = "52998224725", `situacao` = "enviada")
+- [X] T008 [P] [US1] Em `tests/test_inscricao.py`, `test_fr008_confirmacao_exibe_nome` (`#confirmacao` visível, título "Inscrição enviada com sucesso!", texto contém o nome; formulário oculto)
+- [X] T009 [P] [US1] Em `tests/test_inscricao.py`, `test_fr009_confirmacao_anunciada_e_focada` (`#confirmacao` com `role="status"`; foco em `#confirmacao-titulo`)
+- [X] T010 [P] [US1] Em `tests/test_inscricao.py`, `test_fr011_sem_envio_duplicado` (após envio, Enter/clique repetidos não aumentam `inscricoesEnviadas`; "Nova inscrição" reexibe formulário vazio)
 
 ### Implementação da User Story 1
 
-- [ ] T011 [US1] Em `app/index.html`, implementar o envio simulado (research.md R2): ao submeter sem erros, criar `{nome, cpf (somente dígitos), email, enviadaEm (ISO 8601), situacao: "enviada"}`, adicionar a `window.inscricoesEnviadas` e disparar `inscricao:enviada` em `document`
-- [ ] T012 [US1] Em `app/index.html`, exibir a confirmação: ocultar o formulário, mostrar `#confirmacao` com "Inscrição enviada com sucesso!" e o nome, mover o foco para `#confirmacao-titulo`
-- [ ] T013 [US1] Em `app/index.html`, bloquear reenvio (sinalizador + formulário oculto) e implementar `#nova-inscricao` (limpa campos/mensagens, reexibe formulário, foco em `#nome`)
+- [X] T011 [US1] Em `app/index.html`, implementar o envio simulado (research.md R2): ao submeter sem erros, criar `{nome, cpf (somente dígitos), email, enviadaEm (ISO 8601), situacao: "enviada"}`, adicionar a `window.inscricoesEnviadas` e disparar `inscricao:enviada` em `document`
+- [X] T012 [US1] Em `app/index.html`, exibir a confirmação: ocultar o formulário, mostrar `#confirmacao` com "Inscrição enviada com sucesso!" e o nome, mover o foco para `#confirmacao-titulo`
+- [X] T013 [US1] Em `app/index.html`, bloquear reenvio (sinalizador + formulário oculto) e implementar `#nova-inscricao` (limpa campos/mensagens, reexibe formulário, foco em `#nome`)
 
 **Checkpoint**: US1 funcional e testável sozinha
 
@@ -84,15 +84,15 @@ implementação.
 
 ### Testes da User Story 2 (escrever primeiro; devem FALHAR)
 
-- [ ] T014 [P] [US2] Em `tests/test_cpf.py`, `test_fr002_cpfs_validos_aceitos` e `test_fr002_digito_verificador_incorreto_rejeitado` e `test_fr002_tamanho_diferente_de_11_rejeitado` via `window.validarCPF` (com/sem máscara; letras ignoradas)
-- [ ] T015 [P] [US2] Em `tests/test_cpf.py`, `test_fr003_todos_digitos_iguais_rejeitados` (000.000.000-00 a 999.999.999-99)
-- [ ] T016 [P] [US2] Em `tests/test_inscricao.py`, `test_fr004_cpf_invalido_nao_envia_e_mostra_erro` (texto exato em `#cpf-erro`; `inscricoesEnviadas` vazio; `#cpf` com `aria-invalid="true"` e foco)
-- [ ] T017 [P] [US2] Em `tests/test_inscricao.py`, `test_fr010_corrigir_cpf_remove_erro_e_envia`
+- [X] T014 [P] [US2] Em `tests/test_cpf.py`, `test_fr002_cpfs_validos_aceitos` e `test_fr002_digito_verificador_incorreto_rejeitado` e `test_fr002_tamanho_diferente_de_11_rejeitado` via `window.validarCPF` (com/sem máscara; letras ignoradas)
+- [X] T015 [P] [US2] Em `tests/test_cpf.py`, `test_fr003_todos_digitos_iguais_rejeitados` (000.000.000-00 a 999.999.999-99)
+- [X] T016 [P] [US2] Em `tests/test_inscricao.py`, `test_fr004_cpf_invalido_nao_envia_e_mostra_erro` (texto exato em `#cpf-erro`; `inscricoesEnviadas` vazio; `#cpf` com `aria-invalid="true"` e foco)
+- [X] T017 [P] [US2] Em `tests/test_inscricao.py`, `test_fr010_corrigir_cpf_remove_erro_e_envia`
 
 ### Implementação da User Story 2
 
-- [ ] T018 [US2] Em `app/index.html`, implementar `validarCPF(valor)` exposta em `window` (research.md R1): "remover tudo que não for dígito; exigir 11 dígitos; rejeitar se todos forem iguais"; DVs por módulo 11 com 10 → 0
-- [ ] T019 [US2] Em `app/index.html`, integrar a validação do CPF ao envio: mensagem "CPF inválido. Verifique os números digitados." em `#cpf-erro`, `aria-invalid="true"`, sem envio; limpar erro quando válido (FR-010)
+- [X] T018 [US2] Em `app/index.html`, implementar `validarCPF(valor)` exposta em `window` (research.md R1): "remover tudo que não for dígito; exigir 11 dígitos; rejeitar se todos forem iguais"; DVs por módulo 11 com 10 → 0
+- [X] T019 [US2] Em `app/index.html`, integrar a validação do CPF ao envio: mensagem "CPF inválido. Verifique os números digitados." em `#cpf-erro`, `aria-invalid="true"`, sem envio; limpar erro quando válido (FR-010)
 
 **Checkpoint**: US1 e US2 funcionam de forma independente
 
@@ -106,15 +106,15 @@ implementação.
 
 ### Testes da User Story 3 (escrever primeiro; devem FALHAR)
 
-- [ ] T020 [P] [US3] Em `tests/test_inscricao.py`, `test_fr005_campos_vazios_nao_enviam` (formulário vazio → 3 mensagens exatas; nome só com espaços tratado como vazio)
-- [ ] T021 [P] [US3] Em `tests/test_inscricao.py`, `test_fr006_email_invalido_nao_envia` ("maria.exemplo.com" → "Informe um e-mail válido, por exemplo nome@dominio.com.")
-- [ ] T022 [P] [US3] Em `tests/test_inscricao.py`, `test_fr009_foco_no_primeiro_erro_e_aria_invalid` (vários erros → foco no primeiro na ordem nome, CPF, e-mail; `aria-describedby` aponta para a mensagem; `#resumo-erros` com `role="alert"` não vazio)
+- [X] T020 [P] [US3] Em `tests/test_inscricao.py`, `test_fr005_campos_vazios_nao_enviam` (formulário vazio → 3 mensagens exatas; nome só com espaços tratado como vazio)
+- [X] T021 [P] [US3] Em `tests/test_inscricao.py`, `test_fr006_email_invalido_nao_envia` ("maria.exemplo.com" → "Informe um e-mail válido, por exemplo nome@dominio.com.")
+- [X] T022 [P] [US3] Em `tests/test_inscricao.py`, `test_fr009_foco_no_primeiro_erro_e_aria_invalid` (vários erros → foco no primeiro na ordem nome, CPF, e-mail; `aria-describedby` aponta para a mensagem; `#resumo-erros` com `role="alert"` não vazio)
 
 ### Implementação da User Story 3
 
-- [ ] T023 [US3] Em `app/index.html`, validar obrigatoriedade após `trim` com as mensagens "Informe seu nome completo.", "Informe seu CPF.", "Informe seu e-mail." (obrigatoriedade antes de formato, data-model.md)
-- [ ] T024 [US3] Em `app/index.html`, validar e-mail com `^[^\s@]+@[^\s@]+\.[^\s@]+$` e mensagem "Informe um e-mail válido, por exemplo nome@dominio.com."
-- [ ] T025 [US3] Em `app/index.html`, preencher `#resumo-erros` com a quantidade de erros e mover o foco para o primeiro campo inválido
+- [X] T023 [US3] Em `app/index.html`, validar obrigatoriedade após `trim` com as mensagens "Informe seu nome completo.", "Informe seu CPF.", "Informe seu e-mail." (obrigatoriedade antes de formato, data-model.md)
+- [X] T024 [US3] Em `app/index.html`, validar e-mail com `^[^\s@]+@[^\s@]+\.[^\s@]+$` e mensagem "Informe um e-mail válido, por exemplo nome@dominio.com."
+- [X] T025 [US3] Em `app/index.html`, preencher `#resumo-erros` com a quantidade de erros e mover o foco para o primeiro campo inválido
 
 **Checkpoint**: todas as histórias funcionam de forma independente
 
@@ -124,13 +124,29 @@ implementação.
 
 **Purpose**: acessibilidade transversal (FR-012) e portões de qualidade
 
-- [ ] T026 [P] Em `tests/test_inscricao.py`, `test_fr012_operavel_por_teclado` (Tab percorre nome → CPF → e-mail → Continuar; Enter envia; fluxo completo só com teclado) e `test_fr012_contraste_e_foco_visivel` (contraste de texto calculado ≥ 4.5:1 e contorno de foco presente)
-- [ ] T027 Revisar `app/index.html` contra WCAG 2.2 AA (1.3.1, 1.4.1, 1.4.3, 1.4.11, 2.1.1, 2.4.3, 2.4.7, 2.5.8, 3.3.1, 3.3.2, 3.3.3, 4.1.2, 4.1.3) e confirmar a anotação `@spec 001-inscricao-matricula@1.0.0` em todos os arquivos de código
-- [ ] T028 Executar `pytest tests/ -v` (roteiro de `quickstart.md`) — todos os testes devem passar
+- [X] T026 [P] Em `tests/test_inscricao.py`, `test_fr012_operavel_por_teclado` (Tab percorre nome → CPF → e-mail → Continuar; Enter envia; fluxo completo só com teclado) e `test_fr012_contraste_e_foco_visivel` (contraste de texto calculado ≥ 4.5:1 e contorno de foco presente)
+- [X] T027 Revisar `app/index.html` contra WCAG 2.2 AA (1.3.1, 1.4.1, 1.4.3, 1.4.11, 2.1.1, 2.4.3, 2.4.7, 2.5.8, 3.3.1, 3.3.2, 3.3.3, 4.1.2, 4.1.3) e confirmar a anotação `@spec 001-inscricao-matricula@1.0.0` em todos os arquivos de código
+- [X] T028 Executar `pytest tests/ -v` (roteiro de `quickstart.md`) — todos os testes devem passar (resultado em 2026-11-07: 48 passed)
 - [ ] T029 Executar `python evospec.py validate` (portão da constituição) — PENDENTE: `evospec.py` não existe neste workspace
 - [ ] T030 Executar `python evospec.py verify --set-baseline` (portão da constituição) — PENDENTE: `evospec.py` não existe neste workspace
 - [ ] T031 Revisão independente dos testes de aceitação por pessoa que não implementou a feature (Princípio IV) — PENDENTE: não há outra pessoa disponível nesta execução
 - [ ] T032 Varredura automática de acessibilidade com ferramenta dedicada (ex.: axe-core) e avaliação com pessoas com deficiência (Princípio I, SC-005) — PENDENTE: ferramenta não instalada e sem participantes neste workspace
+
+---
+
+## Registro de execução (/speckit-implement, 2026-11-07)
+
+- T001–T028 concluídas. Testes T006–T010, T014–T017, T020–T022 e T026 escritos antes da
+  implementação e confirmados falhando (25 falhas em `tests/test_cpf.py` com a página vazia);
+  após a implementação, `pytest tests/` → 48 passed.
+- T027: revisão WCAG feita pelo próprio agente implementador (autoavaliação; não substitui T031/T032).
+- T029, T030 PENDENTES: `evospec.py` não existe neste workspace; os portões da constituição não
+  puderam ser executados. Substituto provisório: `pytest tests/` sem falhas.
+- T031 PENDENTE: o mesmo agente escreveu testes e implementação (ressalva ao Princípio IV
+  registrada em plan.md); requer revisão humana independente.
+- T032 PENDENTE: axe-core (ou equivalente) não instalado e sem participantes para avaliação com
+  pessoas com deficiência; a verificação automática parcial (contraste, foco, alvo, teclado, ARIA)
+  está em `tests/test_inscricao.py`.
 
 ---
 
