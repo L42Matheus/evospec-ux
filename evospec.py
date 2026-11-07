@@ -24,6 +24,8 @@ from pathlib import Path
 
 import yaml
 
+import speckit_adapter as sk
+
 ROOT = Path(__file__).resolve().parent
 SPECS, EVID, CHANGES, RESULTS = (ROOT / d for d in ("specs", "evidence", "changes", "results"))
 APP = ROOT / "app"
@@ -34,10 +36,17 @@ CHROME = os.environ.get("EVOSPEC_CHROME")  # opcional; sem ele usa o Chromium do
 
 class EvoSpecError(Exception):
     """Erro de uso do método (proposta inexistente, decisão inválida etc.)."""
+
+
 DECISIONS = {"pending", "approved", "rejected", "clarification", "deferred"}
 
 
 # ---------------------------------------------------------------- utilidades
+def load_specs():
+    """Especificações do Spec Kit (specs/<feature>/spec.md) lidas pelo adaptador."""
+    return sk.load_specs(SPECS)
+
+
 def load_dir(d):
     return {y["id"]: (p, y) for p in sorted(d.glob("*.yaml")) for y in [yaml.safe_load(p.read_text())]}
 
@@ -64,11 +73,11 @@ def load_tests():
 
 
 def code_annotations():
-    """Lê anotações @spec SPEC-XX@versão no código da aplicação."""
+    """Lê anotações @spec <feature>@<versão> no código da aplicação."""
     found = {}
     for f in APP.rglob("*"):
         if f.suffix in {".html", ".js", ".ts", ".jsx", ".tsx"}:
-            for m in re.finditer(r"@spec((?:\s+SPEC-\d+@\d+)+)", f.read_text()):
+            for m in re.finditer(r"@spec((?:\s+\d{3}-[\w-]+@\d+)+)", f.read_text()):
                 for ref in m.group(1).split():
                     sid, ver = ref.split("@")
                     found.setdefault(sid, set()).add((int(ver), f.relative_to(ROOT).as_posix()))
@@ -88,7 +97,7 @@ def now():
 
 # ---------------------------------------------------------------- validate
 def validate(quiet=False):
-    specs, evid, crs = load_dir(SPECS), load_dir(EVID), load_dir(CHANGES)
+    specs, evid, crs = load_specs(), load_dir(EVID), load_dir(CHANGES)
     tests = load_tests().CRITERIA
     errors, warns = [], []
     all_ac = {c["id"]: sid for sid, (_, s) in specs.items() for c in s["criteria"]}
@@ -124,10 +133,22 @@ def validate(quiet=False):
 
     # R3 — nenhuma versão de spec sem proposta aprovada
     for sid, (_, s) in specs.items():
+        if s["version"] is None:
+            errors.append(f"[R3] {sid}: spec.md sem a linha **Version** exigida pela constituição")
         for h in s.get("history", [])[1:]:
             cr = crs.get(h.get("cr"), (None, {}))[1]
             if cr.get("decision", {}).get("status") != "approved":
                 errors.append(f"[R3] {sid} v{h['version']}: alteração sem proposta aprovada ({h.get('cr')})")
+
+    # R7 — plano e tarefas do Spec Kit gerados a partir da versão vigente da especificação
+    for sid, (path, s) in specs.items():
+        for art, cmd in (("plan.md", "/speckit-plan"), ("tasks.md", "/speckit-tasks")):
+            v = sk.artifact_spec_version(path.parent / art)
+            if v is None:
+                errors.append(f"[R7] {sid}: {art} ausente ou sem **Spec Version** — rode {cmd}")
+            elif v != s["version"]:
+                errors.append(f"[R7] {sid}: {art} gerado da versão {v}, mas a especificação está na versão "
+                              f"{s['version']} — rode {cmd}")
 
     # R4/R5 — cobertura de critérios por testes
     for ac, sid in all_ac.items():
@@ -188,8 +209,9 @@ inferred: ...
 justification: ...
 wcag: [...]
 spec_changes:
-  - spec: SPEC-XX
-    add_criteria: [{{id: AC-XX.N, text: ...}}]
+  - spec: NNN-nome-da-feature
+    summary: resumo da mudança em uma linha
+    add_criteria: [{{id: NNN/FR-MMM, text: "O sistema MUST ..."}}]
     modify_criteria: []
 preserve: [...]
 decision: {{status: pending}}
@@ -205,7 +227,7 @@ def propose(evd_id, model):
     cr_id = f"CR-{n:03d}"
     prompt = PROMPT.format(
         evidence=evid[evd_id][0].read_text(),
-        specs="\n---\n".join(p.read_text() for p, _ in load_dir(SPECS).values()),
+        specs="\n---\n".join(p.read_text() for p, _ in load_specs().values()),
         cr_id=cr_id, evd_id=evd_id)
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
@@ -230,7 +252,7 @@ def propose(evd_id, model):
 
 # ---------------------------------------------------------------- decide
 def decide(cr_id, by, decision, note):
-    crs, specs = load_dir(CHANGES), load_dir(SPECS)
+    crs, specs = load_dir(CHANGES), load_specs()
     if cr_id not in crs:
         raise EvoSpecError(f"proposta {cr_id} não encontrada")
     path, cr = crs[cr_id]
@@ -244,23 +266,18 @@ def decide(cr_id, by, decision, note):
     if decision == "approved":
         diffs = []
         for ch in cr.get("spec_changes", []):
-            spath, s = specs[ch["spec"]]
+            if ch["spec"] not in specs:
+                raise EvoSpecError(f"especificação {ch['spec']} não existe")
+            spath, _ = specs[ch["spec"]]
             before = spath.read_text()
-            existing = {c["id"]: c for c in s["criteria"]}
-            for c in ch.get("modify_criteria", []):
-                existing[c["id"]]["text"] = c["text"]
-            for c in ch.get("add_criteria", []):
-                if c["id"] in existing:
-                    raise EvoSpecError(f"{c['id']} já existe em {ch['spec']}")
-                s["criteria"].append({"id": c["id"], "text": c["text"]})
-            if ch.get("description"):
-                s["description"] = ch["description"]
-            s["version"] += 1
-            s.setdefault("history", []).append(
-                {"version": s["version"], "cr": cr_id, "evidence": cr.get("evidence", []), "approved_by": by})
-            dump(spath, s)
+            try:
+                sk.apply_change(spath, ch, cr_id, cr.get("evidence", []), by,
+                                ch.get("summary") or cr.get("change_type", "mudança"))
+            except ValueError as exc:
+                raise EvoSpecError(str(exc))
+            rel = spath.relative_to(ROOT).as_posix()
             diffs += difflib.unified_diff(before.splitlines(True), spath.read_text().splitlines(True),
-                                          f"a/specs/{spath.name}", f"b/specs/{spath.name}")
+                                          f"a/{rel}", f"b/{rel}")
         (CHANGES / "diffs").mkdir(exist_ok=True)
         (CHANGES / "diffs" / f"{cr_id}.diff").write_text("".join(diffs))
     dump(path, cr)
@@ -272,7 +289,7 @@ def verify(label, set_baseline):
     from playwright.sync_api import sync_playwright
 
     tests = load_tests().CRITERIA
-    specs = load_dir(SPECS)
+    specs = load_specs()
     url = (APP / "index.html").as_uri()
     results = {}
     with sync_playwright() as p:
@@ -333,7 +350,7 @@ def print_run(run, regressions, set_baseline, baseline_set):
 # ---------------------------------------------------------------- trace
 def trace_rows():
     """Linhas da matriz: critério → spec@versão → evidência → proposta → teste → resultado."""
-    specs, crs = load_dir(SPECS), load_dir(CHANGES)
+    specs, crs = load_specs(), load_dir(CHANGES)
     tests = load_tests().CRITERIA
     base = load_baseline()
     origin = {}
@@ -361,7 +378,7 @@ def load_baseline():
 
 
 def trace():
-    specs, evid, crs = load_dir(SPECS), load_dir(EVID), load_dir(CHANGES)
+    specs, evid, crs = load_specs(), load_dir(EVID), load_dir(CHANGES)
     tests = load_tests().CRITERIA
     base_path = RESULTS / "baseline.json"
     base = json.loads(base_path.read_text()) if base_path.exists() else {"criteria": {}, "commit": None}
@@ -395,7 +412,7 @@ def trace():
 # ---------------------------------------------------------------- status
 def status():
     print("Especificações:")
-    for sid, (_, s) in load_dir(SPECS).items():
+    for sid, (_, s) in load_specs().items():
         print(f"  {sid}@{s['version']}  {s['title']}  ({len(s['criteria'])} critérios)")
     print("Evidências:")
     for eid, (_, e) in load_dir(EVID).items():

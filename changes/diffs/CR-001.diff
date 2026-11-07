@@ -1,31 +1,58 @@
---- a/specs/SPEC-04.yaml
-+++ b/specs/SPEC-04.yaml
-@@ -1,8 +1,8 @@
- id: SPEC-04
- title: Validação do CPF na matrícula
--version: 1
-+version: 2
- status: active
--description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário.
-+description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário, perceptível visualmente e por tecnologias assistivas.
- criteria:
- - id: AC-04.1
-   text: Ao acionar "Continuar" com CPF inválido, a inscrição não é enviada.
-@@ -10,6 +10,17 @@
-   text: Ao acionar "Continuar" com CPF inválido, uma mensagem de erro é exibida.
- - id: AC-04.3
-   text: Ao acionar "Continuar" com CPF válido e demais campos preenchidos, a inscrição é enviada.
-+- id: AC-04.4
-+  text: Ao acionar "Continuar" com CPF inválido, o foco é movido para o campo CPF.
-+- id: AC-04.5
-+  text: Com CPF inválido, o campo CPF é marcado como inválido (aria-invalid) e tem a mensagem de erro como descrição acessível.
-+- id: AC-04.6
-+  text: A mensagem de erro é inserida em uma região viva (role="alert" ou aria-live) presente na página desde o carregamento, para ser anunciada por leitores de tela.
- history:
- - version: 1
-   change: versão inicial
-+- version: 2
-+  cr: CR-001
-+  evidence:
-+  - EVD-17
-+  approved_by: Lucas Matheus Silva
+--- a/specs/001-validacao-cpf/spec.md
++++ b/specs/001-validacao-cpf/spec.md
+@@ -6,7 +6,7 @@
+ 
+ **Status**: Approved
+ 
+-**Version**: 1
++**Version**: 2
+ 
+ **Input**: User description: "Validação do CPF no formulário de matrícula acadêmica. O estudante preenche nome completo, CPF e e-mail e aciona "Continuar". Se o CPF for inválido (dígitos verificadores incorretos ou todos os dígitos iguais), a inscrição não deve ser enviada e uma mensagem de erro deve ser exibida. Se o CPF for válido e os demais campos estiverem preenchidos, a inscrição é enviada e uma confirmação é exibida. Esta é a versão inicial da especificação (antes de qualquer evidência de uso)."
+ 
+@@ -50,6 +50,29 @@
+ 
+ ---
+ 
++### User Story 3 - Perceber o erro com tecnologia assistiva (Priority: P1)
++
++O estudante que usa leitor de tela aciona "Continuar" com CPF inválido e é informado do erro
++imediatamente, com o foco no campo que precisa corrigir. *(Origem: evidência EVD-17, proposta
++CR-001.)*
++
++**Why this priority**: sem isso, o estudante não descobre por que a inscrição não avança e
++precisa de ajuda externa (falha observada na tarefa T2).
++
++**Independent Test**: com o leitor de tela ativo, preencher um CPF inválido, acionar
++"Continuar" e verificar que a mensagem é anunciada e que o foco está no campo CPF.
++
++**Acceptance Scenarios**:
++
++1. **Given** CPF inválido, **When** o estudante aciona "Continuar", **Then** o foco vai para o
++   campo CPF.
++2. **Given** CPF inválido, **When** o foco chega ao campo CPF, **Then** o leitor de tela informa
++   que o campo é inválido e lê a mensagem de erro.
++3. **Given** CPF inválido, **When** a mensagem de erro aparece, **Then** o leitor de tela a
++   anuncia sem ação adicional do estudante.
++
++---
++
+ ### Edge Cases
+ 
+ - CPF com todos os dígitos iguais (por exemplo, 111.111.111-11) é considerado inválido, mesmo que
+@@ -66,6 +89,11 @@
+   estudante acionar "Continuar" com CPF inválido.
+ - **FR-003**: O sistema MUST enviar a inscrição e exibir uma confirmação quando o CPF for válido e
+   os demais campos estiverem preenchidos.
++- **FR-004**: Ao acionar "Continuar" com CPF inválido, o sistema MUST levar o foco para o campo CPF.
++- **FR-005**: Com CPF inválido, o campo CPF MUST ser identificado como inválido para tecnologias
++  assistivas e ter a mensagem de erro como sua descrição acessível.
++- **FR-006**: A mensagem de erro MUST ser anunciada automaticamente por leitores de tela no momento
++  em que aparece, sem que o estudante precise procurá-la.
+ 
+ ### Key Entities *(include if feature involves data)*
+ 
+@@ -94,3 +122,4 @@
+ | Versão | Mudança | Proposta | Evidência | Aprovada por |
+ |--------|---------|----------|-----------|--------------|
+ | 1 | Versão inicial | — | — | — |
++| 2 | Erro do CPF perceptível por tecnologias assistivas | CR-001 | EVD-17 | Lucas Matheus Silva |

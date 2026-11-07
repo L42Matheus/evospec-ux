@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- @spec SPEC-04@2 SPEC-06@1 -->
+<!-- @spec 001-validacao-cpf@2 002-preservacao-dados@1 -->
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -32,7 +32,7 @@
   </main>
 
   <script>
-    // SPEC-04: validação do CPF (dígitos verificadores)
+    // 001-validacao-cpf: validação do CPF (dígitos verificadores)
     function cpfValido(valor) {
       const cpf = valor.replace(/\D/g, '');
       if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -52,7 +52,7 @@
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       if (!cpfValido(cpf.value)) {
-        // CR-001: erro comunicado à tecnologia assistiva, dados preservados (SPEC-06)
+        // CR-001: erro comunicado à tecnologia assistiva, dados preservados (002-preservacao-dados)
         erro.textContent = 'CPF inválido. Digite os 11 números do CPF.';
         cpf.setAttribute('aria-invalid', 'true');
         cpf.focus();

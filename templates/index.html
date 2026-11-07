@@ -74,7 +74,7 @@
       <span>1. Evidência</span><span>2. Proposta</span><span>3. Decisão</span><span>4. Spec vN+1</span><span>5. Implementação</span><span>6. Verificação</span>
     </div>
     <p style="margin-top:1rem">
-      Validação (regras R1–R6):
+      Validação (regras R1–R7):
       {% if errors %}<span class="pill err">{{ errors|length }} erro(s)</span>{% else %}<span class="pill ok">sem erros</span>{% endif %}
       {% if warns %}<span class="pill warn">{{ warns|length }} aviso(s)</span>{% endif %}
       {% if protected %}<span class="pill pur">ações protegidas por senha</span>{% endif %}
@@ -88,19 +88,26 @@
   </section>
 
   <section id="especificacoes" aria-labelledby="h-spec">
-    <h2 id="h-spec">Especificações</h2>
-    <p class="sub">Fonte da verdade lida pelo agente. Cada nova versão precisa de uma proposta aprovada.</p>
+    <h2 id="h-spec">Especificações (GitHub Spec Kit)</h2>
+    <p class="sub">Fonte da verdade lida pelo agente, em <code>specs/&lt;feature&gt;/spec.md</code>, regida pela <a href="/constituicao" target="_blank">constituição</a>. Cada nova versão precisa de uma proposta aprovada, e plano e tarefas precisam ser regenerados (<code>/speckit-plan</code>, <code>/speckit-tasks</code>).</p>
     <div class="grid">
     {% for s in specs %}
       <div class="card">
         <h3>{{ s.id }} <span class="pill pur">v{{ s.version }}</span></h3>
         <p style="margin:.2rem 0 .5rem;font-size:.9rem">{{ s.title }}</p>
+        <p style="margin:0 0 .5rem;font-size:.8rem">
+          plan.md {% if s.plan_version == s.version %}<span class="pill ok">v{{ s.plan_version }}</span>{% else %}<span class="pill err">{{ 'ausente' if s.plan_version is none else 'v' ~ s.plan_version ~ ' desatualizado' }}</span>{% endif %}
+          tasks.md {% if s.tasks_version == s.version %}<span class="pill ok">v{{ s.tasks_version }}</span>{% else %}<span class="pill err">{{ 'ausente' if s.tasks_version is none else 'v' ~ s.tasks_version ~ ' desatualizado' }}</span>{% endif %}
+        </p>
         <ul style="font-size:.85rem;padding-left:1.1rem;margin:0">
-          {% for c in s.criteria %}<li><strong>{{ c.id }}</strong> {{ c.text }}</li>{% endfor %}
+          {% for c in s.criteria %}<li><strong>{{ c.local }}</strong> {{ c.text }}</li>{% endfor %}
         </ul>
         <details><summary>Histórico de versões</summary>
           <ul style="font-size:.82rem">{% for h in s.history %}
-            <li>v{{ h.version }} — {{ h.change or ('via ' ~ h.cr ~ ', aprovada por ' ~ h.approved_by) }}</li>{% endfor %}</ul>
+            <li>v{{ h.version }} — {{ h.change }}{% if h.cr %} ({{ h.cr }}, {{ h.evidence|join(', ') }}, aprovada por {{ h.approved_by }}){% endif %}</li>{% endfor %}</ul>
+        </details>
+        <details><summary>Artefatos do Spec Kit</summary>
+          <ul style="font-size:.82rem">{% for d in s.docs %}<li><a href="/specs/{{ s.id }}/{{ d }}" target="_blank">{{ d }}</a></li>{% endfor %}</ul>
         </details>
       </div>
     {% endfor %}

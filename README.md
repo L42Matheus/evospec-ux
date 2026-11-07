@@ -4,16 +4,42 @@ Protótipo do método descrito no pré-projeto *Spec-Driven Development Orientad
 
 > Protótipo exploratório. Não constitui resultado experimental; serve para materializar o método, testar as regras de governança e preparar o piloto.
 
+## Integração com o GitHub Spec Kit
+
+O SDD do protótipo é o [GitHub Spec Kit](https://github.com/github/spec-kit) oficial (CLI `specify`
+1.3.3, integração `claude`). O EvoSpec-UX funciona como uma camada de evolução governada por cima
+dele:
+
+| Spec Kit (fluxo inicial) | EvoSpec-UX (evolução) |
+|---|---|
+| `/speckit-constitution` → `.specify/memory/constitution.md` | evidência de uso → `evidence/EVD-*.yaml` |
+| `/speckit-specify` → `specs/<feature>/spec.md` | proposta (LLM) → `changes/CR-*.yaml` |
+| `/speckit-plan` → `plan.md`, `research.md`, `data-model.md`, `contracts/`, `quickstart.md` | decisão humana → o EvoSpec altera o `spec.md` (requisitos, versão, histórico) |
+| `/speckit-tasks` → `tasks.md` | R7 exige regenerar `plan.md` e `tasks.md`; R4 exige testes dos novos FR |
+| `/speckit-implement` → código | `verify`: testes por requisito, axe-core e regressões |
+
+O EvoSpec-UX acrescenta ao modelo do Spec Kit apenas o campo `**Version**` e a seção
+"Histórico de versões (EvoSpec)" no `spec.md`, e a linha `**Spec Version**` em `plan.md` e `tasks.md`.
+Os requisitos são as linhas `**FR-NNN**` do próprio Spec Kit, referenciados globalmente como
+`<feature>/FR-NNN` (por exemplo, `001/FR-004`). A leitura e a escrita ficam em `speckit_adapter.py`.
+
+O próprio Spec Kit não define como manter os artefatos quando os requisitos mudam; essa é a lacuna
+que o EvoSpec-UX investiga.
+
 ## Estrutura
 
 ```
-app/index.html            aplicação de referência (formulário de matrícula), anotada com @spec SPEC-XX@versão
-specs/SPEC-*.yaml         especificações versionadas com critérios de aceitação (AC-*)
+.specify/                 Spec Kit: constituição, modelos e scripts
+.claude/skills/           Spec Kit: comandos /speckit-* para o Claude Code
+specs/001-validacao-cpf/  feature do Spec Kit (spec.md v2, plan.md, tasks.md, research, contratos...)
+specs/002-preservacao-dados/
+speckit_adapter.py        leitura/escrita dos artefatos do Spec Kit pelo EvoSpec-UX
+app/index.html            aplicação de referência, anotada com @spec <feature>@<versão>
 evidence/EVD-*.yaml       evidências de uso estruturadas (observado, tarefa, tecnologia assistiva, severidade)
 changes/CR-*.yaml         propostas de mudança (observado × inferido, justificativa, impacto, decisão humana)
 changes/diffs/            diffs das especificações gerados na aprovação
 changes/prompts/          prompts enviados ao LLM para redigir propostas
-tests/acceptance.py       testes de aceitação ligados a critérios (@criterion("AC-04.4"))
+tests/acceptance.py       testes de aceitação ligados a requisitos (@criterion("001/FR-004"))
 tests/test_governance.py  autotestes das regras de governança
 results/baseline.json     última verificação aceita (sem regressões)
 TRACE.md                  matriz evidência → proposta → spec@versão → critério → teste → resultado
@@ -89,8 +115,14 @@ Os dois mecanismos da Seção 4.1 estão separados no código: a **incorporaçã
 | R4 | todo critério ativo tem teste de aceitação |
 | R5 | não há teste órfão (para critério inexistente) |
 | R6 | drift: o código declara implementar a versão aprovada de cada especificação |
+| R7 | `plan.md` e `tasks.md` do Spec Kit foram gerados a partir da versão vigente do `spec.md` |
 
 ## Rodada de demonstração (histórico do git)
+
+> As rodadas abaixo foram feitas com o formato YAML anterior (arquivado em `docs/legacy/` e
+> `results/legacy/`). Na migração para o Spec Kit (nov. 2026), as especificações foram recriadas com
+> `/speckit-specify` na versão 1, a CR-001 foi reaplicada pelo EvoSpec ao `spec.md` (gerando a
+> versão 2), e plano e tarefas foram gerados com `/speckit-plan` e `/speckit-tasks`.
 
 1. **r0**: app v1, SPEC-04@1, SPEC-06@1. Todos os critérios passam; **axe-core: 0 violações**, apesar da barreira real.
 2. **EVD-17** registrada → `propose` gera o prompt → o LLM redige **CR-001** (pending).

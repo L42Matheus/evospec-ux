@@ -1,6 +1,7 @@
 """Testes de aceitação ligados aos critérios das especificações.
 
-Cada teste declara o critério que verifica com @criterion("AC-xx.y").
+Cada teste declara o requisito do Spec Kit que verifica com @criterion("<feature>/FR-NNN"),
+por exemplo @criterion("001/FR-004") para o FR-004 de specs/001-validacao-cpf/spec.md.
 Os testes são escritos a partir dos critérios aprovados, e não pelo agente
 que implementa a mudança (verificação independente).
 """
@@ -27,35 +28,36 @@ def preencher(page, cpf):
     page.get_by_role("button", name="Continuar").click()
 
 
-@criterion("AC-04.1")
+@criterion("001/FR-001")
 def cpf_invalido_bloqueia_envio(page):
     preencher(page, CPF_INVALIDO)
     assert page.locator("#confirmacao").is_hidden(), "inscrição foi enviada com CPF inválido"
 
 
-@criterion("AC-04.2")
+@criterion("001/FR-002")
 def cpf_invalido_exibe_mensagem(page):
     preencher(page, CPF_INVALIDO)
     erro = page.get_by_text("CPF inválido")
     assert erro.count() > 0 and erro.first.is_visible(), "mensagem de erro não exibida"
 
 
-@criterion("AC-04.3")
+@criterion("001/FR-003")
 def cpf_valido_envia(page):
     preencher(page, CPF_VALIDO)
     assert page.locator("#confirmacao").is_visible(), "inscrição válida não foi enviada"
 
 
-# ---- Critérios adicionados por CR-001 (evidência EVD-17), escritos antes da implementação
+# ---- Requisitos FR-004 a FR-006 da 001-validacao-cpf@2 (CR-001, evidência EVD-17),
+# escritos pelo verificador antes da implementação
 
-@criterion("AC-04.4")
+@criterion("001/FR-004")
 def foco_vai_para_cpf(page):
     preencher(page, CPF_INVALIDO)
     foco = page.evaluate("document.activeElement && document.activeElement.id")
     assert foco == "cpf", f"foco está em '{foco}', esperado 'cpf'"
 
 
-@criterion("AC-04.5")
+@criterion("001/FR-005")
 def cpf_marcado_invalido_com_descricao(page):
     from playwright.sync_api import expect
     preencher(page, CPF_INVALIDO)
@@ -65,7 +67,7 @@ def cpf_marcado_invalido_com_descricao(page):
     expect(campo).to_have_accessible_description(re.compile("CPF inválido"), timeout=1000)
 
 
-@criterion("AC-04.6")
+@criterion("001/FR-006")
 def mensagem_em_regiao_viva(page):
     regioes = page.evaluate(
         "[...document.querySelectorAll('[role=alert],[aria-live=polite],[aria-live=assertive]')].map(e => e.id || e.outerHTML.slice(0, 40))")
@@ -76,7 +78,7 @@ def mensagem_em_regiao_viva(page):
     assert any("CPF inválido" in t for t in textos), "mensagem de erro não foi inserida em região viva"
 
 
-@criterion("AC-06.1")
+@criterion("002/FR-001")
 def dados_preservados_apos_erro(page):
     preencher(page, CPF_INVALIDO)
     valores = {c: page.input_value(f"#{c}") for c in ("nome", "cpf", "email")}

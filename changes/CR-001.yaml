@@ -3,32 +3,34 @@ evidence:
 - EVD-17
 drafted_by: llm:claude-opus-5-5 (resposta ao prompt changes/prompts/CR-001-EVD-17.md)
 affected_specs:
-- SPEC-04
+- 001-validacao-cpf
 change_type: lacuna_da_especificacao
 observed: Após acionar "Continuar" com CPF inválido, o participante (leitor de tela) não percebeu a mensagem de erro; o leitor de tela não verbalizou mensagem; foi necessária ajuda do moderador.
-inferred: A mensagem de erro não é exposta à tecnologia assistiva (não está em região viva nem associada ao campo) e o foco não é levado ao campo com erro. A especificação SPEC-04@1 exige apenas que a mensagem seja exibida, sem dizer como ela deve ser percebida.
-justification: AC-04.2 está atendido visualmente, mas a tarefa T2 falhou para o participante. A lacuna está na especificação (forma de comunicar o erro), não apenas no código.
+inferred: A mensagem de erro não é exposta à tecnologia assistiva (não está em região viva nem associada ao campo) e o foco não é levado ao campo com erro. A versão 1 da especificação exige apenas que a mensagem seja exibida (FR-002), sem dizer como ela deve ser percebida.
+justification: FR-002 está atendido visualmente, mas a tarefa T2 falhou para o participante e SC-003 não foi alcançado. A lacuna está na especificação (forma de comunicar o erro), não apenas no código.
 wcag:
 - 3.3.1
 - 4.1.3
 spec_changes:
-- spec: SPEC-04
-  description: O estudante deve informar o CPF e receber uma mensagem de validação quando necessário, perceptível visualmente e por tecnologias assistivas.
+- spec: 001-validacao-cpf
+  summary: Erro do CPF perceptível por tecnologias assistivas
   add_criteria:
-  - id: AC-04.4
-    text: Ao acionar "Continuar" com CPF inválido, o foco é movido para o campo CPF.
-  - id: AC-04.5
-    text: Com CPF inválido, o campo CPF é marcado como inválido (aria-invalid) e tem a mensagem de erro como descrição acessível.
-  - id: AC-04.6
-    text: A mensagem de erro é inserida em uma região viva (role="alert" ou aria-live) presente na página desde o carregamento, para ser anunciada por leitores de tela.
-  modify_criteria: []
+  - id: 001/FR-004
+    text: Ao acionar "Continuar" com CPF inválido, o sistema MUST levar o foco para o campo CPF.
+  - id: 001/FR-005
+    text: Com CPF inválido, o campo CPF MUST ser identificado como inválido para tecnologias assistivas e ter a mensagem de erro como sua descrição acessível.
+  - id: 001/FR-006
+    text: A mensagem de erro MUST ser anunciada automaticamente por leitores de tela no momento em que aparece, sem que o estudante precise procurá-la.
+  insert_markdown:
+  - before: '### Edge Cases'
+    text: '### User Story 3 - Perceber o erro com tecnologia assistiva (Priority: P1) O estudante que usa leitor de tela aciona "Continuar" com CPF inválido e é informado do erro imediatamente, com o foco no campo que precisa corrigir. *(Origem: evidência EVD-17, proposta CR-001.)* **Why this priority**: sem isso, o estudante não descobre por que a inscrição não avança e precisa de ajuda externa (falha observada na tarefa T2). **Independent Test**: com o leitor de tela ativo, preencher um CPF inválido, acionar "Continuar" e verificar que a mensagem é anunciada e que o foco está no campo CPF. **Acceptance Scenarios**: 1. **Given** CPF inválido, **When** o estudante aciona "Continuar", **Then** o foco vai para o campo CPF. 2. **Given** CPF inválido, **When** o foco chega ao campo CPF, **Then** o leitor de tela informa que o campo é inválido e lê a mensagem de erro. 3. **Given** CPF inválido, **When** a mensagem de erro aparece, **Then** o leitor de tela a anuncia sem ação adicional do estudante.'
 preserve:
-- AC-04.1
-- AC-04.2
-- AC-04.3
-- AC-06.1
+- 001/FR-001
+- 001/FR-002
+- 001/FR-003
+- 002/FR-001
 decision:
   status: approved
   by: Lucas Matheus Silva
   at: '2026-11-06T19:36:27-03:00'
-  note: 'Aprovada: lacuna confirmada na sessão T2'
+  note: 'Aprovada: lacuna confirmada na sessão T2. Reaplicada à spec.md do Spec Kit na migração de 2026-11-07.'

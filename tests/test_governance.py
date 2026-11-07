@@ -38,11 +38,17 @@ def sem_observacao(d):
 
 
 def spec_sem_aprovacao(d):
-    def f(s):
-        s["version"] += 1
-        s["criteria"].append({"id": "AC-06.2", "text": "Novo critério sem proposta."})
-        s["history"].append({"version": s["version"], "cr": "CR-999"})
-    edit_yaml(d / "specs/SPEC-06.yaml", f)
+    p = d / "specs/002-preservacao-dados/spec.md"
+    t = p.read_text().replace("**Version**: 1", "**Version**: 2")
+    t = t.replace("os valores informados pelo estudante.",
+                  "os valores informados pelo estudante.\n- **FR-002**: Novo requisito sem proposta.")
+    t = t.rstrip("\n") + "\n| 2 | Mudança sem proposta | CR-999 | — | ninguém |\n"
+    p.write_text(t)
+
+
+def plano_desatualizado(d):
+    p = d / "specs/001-validacao-cpf/plan.md"
+    p.write_text(p.read_text().replace("**Spec Version**: 2", "**Spec Version**: 1"))
 
 
 def decisao_sem_responsavel(d):
@@ -51,12 +57,12 @@ def decisao_sem_responsavel(d):
 
 def drift_codigo(d):
     p = d / "app/index.html"
-    p.write_text(p.read_text().replace("SPEC-04@2", "SPEC-04@1"))
+    p.write_text(p.read_text().replace("001-validacao-cpf@2", "001-validacao-cpf@1"))
 
 
 def teste_orfao(d):
     p = d / "tests/acceptance.py"
-    p.write_text(p.read_text() + '\n\n@criterion("AC-99.9")\ndef inexistente(page):\n    pass\n')
+    p.write_text(p.read_text() + '\n\n@criterion("999/FR-999")\ndef inexistente(page):\n    pass\n')
 
 
 def evidencia_inexistente(d):
@@ -70,6 +76,7 @@ if __name__ == "__main__":
         ("especificação alterada sem proposta aprovada", spec_sem_aprovacao, "[R3]"),
         ("decisão sem responsável humano", decisao_sem_responsavel, "[R3]"),
         ("código implementa versão antiga da especificação", drift_codigo, "[R6]"),
+        ("plan.md gerado de versão antiga da especificação", plano_desatualizado, "[R7]"),
         ("teste para critério inexistente", teste_orfao, "[R5]"),
         ("proposta referencia evidência inexistente", evidencia_inexistente, "[R1]"),
     ]

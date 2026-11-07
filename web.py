@@ -4,6 +4,8 @@ Rotas principais:
   /                 painel (especificações, evidências, propostas, verificação, rastreabilidade)
   /app/             aplicação de referência (formulário de matrícula, versão atual)
   /versoes/v1       versão 1 do formulário (antes da evidência EVD-17), para comparação
+  /specs/<arquivo>  artefatos do GitHub Spec Kit (spec.md, plan.md, tasks.md...)
+  /constituicao     constituição do projeto (.specify/memory/constitution.md)
   POST /evidencias  registra nova evidência
   POST /propor/<id> gera proposta de mudança via LLM (requer ANTHROPIC_API_KEY)
   POST /decidir/<id> registra decisão humana sobre uma proposta
@@ -58,7 +60,14 @@ def runs():
 
 @app.get("/")
 def index():
-    specs = [s for _, s in es.load_dir(es.SPECS).values()]
+    specs = []
+    for path, s in es.load_specs().values():
+        s = dict(s)
+        s["plan_version"] = es.sk.artifact_spec_version(path.parent / "plan.md")
+        s["tasks_version"] = es.sk.artifact_spec_version(path.parent / "tasks.md")
+        s["docs"] = sorted(p.relative_to(path.parent).as_posix()
+                           for p in path.parent.rglob("*.md"))
+        specs.append(s)
     evid = [e for _, e in es.load_dir(es.EVID).values()]
     crs = [c for _, c in es.load_dir(es.CHANGES).values()]
     used = {e for c in crs for e in c.get("evidence", [])}
@@ -85,6 +94,19 @@ def reference_app():
 @app.get("/versoes/v1")
 def reference_v1():
     return send_from_directory(es.ROOT / "docs" / "versoes", "v1.html")
+
+
+@app.get("/specs/<path:name>")
+def spec_file(name):
+    if not name.endswith(".md"):
+        abort(404)
+    return send_from_directory(es.SPECS, name, mimetype="text/plain; charset=utf-8")
+
+
+@app.get("/constituicao")
+def constitution():
+    return send_from_directory(es.ROOT / ".specify" / "memory", "constitution.md",
+                               mimetype="text/plain; charset=utf-8")
 
 
 @app.get("/prompts/<path:name>")
