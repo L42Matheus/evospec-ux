@@ -26,11 +26,13 @@ import yaml
 
 import speckit_adapter as sk
 
-ROOT = Path(__file__).resolve().parent
+TOOL_ROOT = Path(__file__).resolve().parent
+# EVOSPEC_ROOT permite aplicar o EvoSpec-UX a outro repositório que use o Spec Kit
+ROOT = Path(os.environ.get("EVOSPEC_ROOT", TOOL_ROOT)).resolve()
 SPECS, EVID, CHANGES, RESULTS = (ROOT / d for d in ("specs", "evidence", "changes", "results"))
 APP = ROOT / "app"
 TESTS = ROOT / "tests" / "acceptance.py"
-AXE = ROOT / "vendor" / "axe.min.js"   # axe-core (MPL-2.0), ver vendor/axe-core-LICENSE.txt
+AXE = TOOL_ROOT / "vendor" / "axe.min.js"   # axe-core (MPL-2.0), ver vendor/axe-core-LICENSE.txt
 CHROME = os.environ.get("EVOSPEC_CHROME")  # opcional; sem ele usa o Chromium do Playwright
 
 
@@ -66,6 +68,10 @@ def dump(path, data):
 
 
 def load_tests():
+    if not TESTS.exists():
+        class _SemTestes:
+            CRITERIA = {}
+        return _SemTestes
     spec = importlib.util.spec_from_file_location("acceptance", TESTS)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
