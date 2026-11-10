@@ -78,15 +78,22 @@ def load_tests():
     return mod
 
 
+IGNORAR = {".git", "node_modules", "specs", ".specify", ".claude", "tests", "vendor", "results",
+           "docs", "changes", "evidence", ".pgdata-demo", ".pgdata-local"}
+
+
 def code_annotations():
-    """Lê anotações @spec <feature>@<versão> no código da aplicação."""
+    """Lê anotações @spec <feature>@<versão> nos arquivos de código do repositório inteiro."""
     found = {}
-    for f in APP.rglob("*"):
-        if f.suffix in {".html", ".js", ".ts", ".jsx", ".tsx"}:
-            for m in re.finditer(r"@spec((?:\s+\d{3}-[\w-]+@\d+)+)", f.read_text()):
-                for ref in m.group(1).split():
-                    sid, ver = ref.split("@")
-                    found.setdefault(sid, set()).add((int(ver), f.relative_to(ROOT).as_posix()))
+    for f in ROOT.rglob("*"):
+        if f.suffix not in {".html", ".js", ".ts", ".jsx", ".tsx", ".css", ".py"} or not f.is_file():
+            continue
+        if IGNORAR & set(f.relative_to(ROOT).parts) or f.name in {"evospec.py", "speckit_adapter.py", "web.py"}:
+            continue
+        for m in re.finditer(r"@spec((?:\s+\d{3}-[\w-]+@\d+)+)", f.read_text(errors="ignore")):
+            for ref in m.group(1).split():
+                sid, ver = ref.split("@")
+                found.setdefault(sid, set()).add((int(ver), f.relative_to(ROOT).as_posix()))
     return found
 
 
@@ -335,6 +342,10 @@ def verify(label, set_baseline):
     base = json.loads(base_path.read_text()) if base_path.exists() else None
     regressions = [ac for ac, r in results.items()
                    if base and base["criteria"].get(ac, {}).get("passed") and not r["passed"]]
+    # violação automática de um tipo que não existia na linha de base também é regressão
+    if base:
+        antes = {v["id"] for v in base.get("axe_violations", [])}
+        regressions += [f"axe:{v['id']}" for v in axe if v["id"] not in antes]
 
     baseline_set = False
     if set_baseline and not regressions:
@@ -351,7 +362,8 @@ def print_run(run, regressions, set_baseline, baseline_set):
         print(f"  {mark}  {ac:8} {r['test']}{flag}" + ("" if r["passed"] else f"\n           {r.get('detail', '')}"))
     axe = run["axe_violations"]
     print(f"  axe-core: {len(axe)} violação(ões) WCAG automática(s)" +
-          "".join(f"\n           {v['id']} ({v['impact']}, {v['nodes']} nó(s))" for v in axe))
+          "".join(f"\n           {v['id']} ({v['impact']}, {v['nodes']} nó(s))"
+                  + ("  <-- REGRESSÃO (tipo novo)" if f"axe:{v['id']}" in regressions else "") for v in axe))
     print(f"  Regressões em relação à linha de base: {len(regressions)}")
     if set_baseline:
         print("  Linha de base atualizada." if baseline_set else "  Linha de base NÃO atualizada: há regressões.")
